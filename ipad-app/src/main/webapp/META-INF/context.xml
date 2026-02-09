@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<Context>
+  <Resource name="jdbc/ipadDS" auth="Container"
+            type="javax.sql.DataSource"
+            maxTotal="20" maxIdle="5" maxWaitMillis="10000"
+            username="root" password="pompom2026"
+            driverClassName="com.mysql.cj.jdbc.Driver"
+            url="jdbc:mysql://localhost:3306/ipad?useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Tokyo"/>
+</Context>
