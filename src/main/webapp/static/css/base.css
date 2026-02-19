@@ -1,0 +1,113 @@
+
+/* ========================================================================
+   base.css  : 共通部品（ヘッダー / フォント / カラーテーマ）
+   ======================================================================== */
+
+/* ---- Theme Tokens (色・サイズの共通変数) ---- */
+:root{
+  --navy: #083b65;
+  --navy-dark: #062b49;
+
+  --bg: #f3f5f7;     /* 画面の背景（薄いグレー） */
+  --card: #ffffff;
+  --border: #d6dde5;
+  --text: #0b1f2a;
+  --muted: #5e7385;
+
+  --success:#0f7b4f;
+  --error:#b22222;
+
+  --base-font: clamp(14px, 1vw, 15px);
+  --radius: 1px;
+}
+
+/* ---- Reset / Base ---- */
+*{ box-sizing: border-box; }
+
+html, body{
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  /* 全体フォント：メイリオ優先 */
+  font-family: "Meiryo", "メイリオ",
+               system-ui, -apple-system, "Segoe UI",
+               "Hiragino Kaku Gothic ProN", Arial, sans-serif;
+  font-size: var(--base-font);
+}
+
+/* ---- 共通レイアウト ---- */
+.container{
+  max-width: min(90vw, 1080px);
+  margin: 28px auto;
+  padding: 0 16px;
+}
+
+/* ---- 共通ボタン（必要最低限） ---- */
+.btn{
+  display:inline-block;
+  border:none;
+  border-radius: var(--radius);
+  padding: .56rem 1rem;
+  cursor:pointer;
+  font-weight:600;
+  font-size:.95rem;
+  background: var(--navy);
+  color:#fff;
+  transition: filter .12s ease, transform .02s ease, background .18s ease;
+}
+.btn:hover{ filter: brightness(0.96); background: var(--navy-dark); }
+.btn:active{ transform: translateY(1px); }
+.btn:disabled{ opacity:.6; cursor:not-allowed; background: var(--navy); }
+.btn.ghost{ background:#fff; border:1px solid var(--border); color:var(--text); }
+
+/* ---- 共通メッセージ ---- */
+.note{ margin-top:.45rem; padding:.45rem .6rem; border-radius:var(--radius); }
+.note.success{ background:#e6f4ee; color:var(--success); border:1px solid #cde7dd; }
+.note.error{   background:#fbe9e9; color:var(--error);   border:1px solid #f1c4c4; }
+
+/* ========================================================================
+   共通ヘッダー（ログイン画面の見た目に統一）
+   ======================================================================== */
+.topbar{
+  background: var(--navy);
+  color: #fff;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+.topbar__inner{
+  width: min(1080px, 92vw);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;     /* 左：タイトル / 右：ユーザ情報 */
+  padding: 0 12px;
+  gap: 12px;
+}
+.topbar__title{
+  font-size: 22px !important;         /* 他のスタイルからの上書きを防止 */
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+/* ログイン画面だけ中央寄せにしたい場合に付ける補助クラス */
+.topbar--center .topbar__inner{ justify-content: center; }
+
+/* 右側のユーザ情報（メニュー画面など） */
+.topbar .user{
+  margin-left: auto;
+  font-size: 14px;
+  opacity: .92;
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  white-space: nowrap;
+}
+.topbar .logout{
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+}

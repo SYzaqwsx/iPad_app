@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<Context>
+  <Resource name="jdbc/ipad"
+             auth="Container"
+             type="javax.sql.DataSource"
+             factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+             driverClassName="com.mysql.cj.jdbc.Driver"
+             maxTotal="20"
+             maxIdle="10" 
+             maxWaitMillis="10000"
+             username="root"
+             password="pompom2026"
+             url="jdbc:mysql://localhost:3306/ipad?useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Tokyo"
+             validationQuery="SELECT 1" 
+            />
+</Context>
