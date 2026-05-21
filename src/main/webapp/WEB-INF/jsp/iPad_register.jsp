@@ -9,7 +9,7 @@
   <title>端末情報 登録フォーム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- ▼ 共通部品（必ず <link> で読み込む） -->
+  <!-- ▼ 共通CSS 読み込み -->
   <link rel="stylesheet" href="<%= request.getContextPath() %>/static/css/base.css?v=20260218">
 
   <!-- ▼ この画面だけの細かいスタイル（埋め込み） -->
@@ -169,7 +169,6 @@
 
         <div class="modal-actions">
           <button type="button" class="btn ghost" id="closeCsvModalBtn">戻る</button>
-          <!-- ★ 正しいリンク -->
           <a class="btn ghost" href="<%= request.getContextPath() %>/download-csv-template">テンプレダウンロード</a>
           <button type="submit" class="btn" id="csvUploadBtn" disabled>アップロード</button>
         </div>

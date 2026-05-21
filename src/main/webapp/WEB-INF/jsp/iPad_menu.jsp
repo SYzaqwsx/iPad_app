@@ -12,7 +12,7 @@
   <title>iPad 管理システム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- ▼ 正しい CSS 読み込み -->
+  <!-- ▼ 共通CSS 読み込み -->
   <link rel="stylesheet" href="${pageContext.request.contextPath}/static/css/base.css?v=20260218">
 
   <!-- ▼ この画面専用のCSS -->
