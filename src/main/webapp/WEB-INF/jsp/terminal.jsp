@@ -2,6 +2,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -57,7 +58,7 @@ td{
 
 /* 固定列 */
 th.fixed{ left:0; z-index:6;}
-th.fixed2{ left:43px; z-index:6;}
+th.fixed2{ left:40px; z-index:6;}
 
 td.fixed{ position:sticky; left:0; background:#fff; }
 td.fixed2{ position:sticky; left:43px; background:#fff; }
@@ -77,9 +78,13 @@ td.fixed2{ position:sticky; left:43px; background:#fff; }
 
 .pager a{ margin:0 5px; }
 
-.excel-box{ text-align:right; }
+.excel-box{
+    display:flex;
+    justify-content:flex-end;
+}
 
-/* ===== モーダル ===== */
+
+/* ===== 検索モーダル ===== */
 .modal{
     display:none;
     position:fixed;
@@ -140,7 +145,6 @@ td.fixed2{ position:sticky; left:43px; background:#fff; }
     width:46px;
 }
 
-
 .slider {
   position: absolute;
   cursor: pointer;
@@ -171,7 +175,9 @@ td.fixed2{ position:sticky; left:43px; background:#fff; }
   transform: translateX(22px);
 }
 
-
+.terminated {
+    background-color:#e0e0e0;
+}
 </style>
 
 <script>
@@ -185,11 +191,9 @@ function resetForm(){
     document.getElementById("searchForm").reset();
 }
 </script>
-
 </head>
 
 <body>
-
 <header class="topbar">
   <div class="topbar__inner">
     <div class="topbar__title">iPad台帳システム</div>
@@ -198,10 +202,8 @@ function resetForm(){
 </header>
 
 <div class="container">
-
 <div class="table-wrap">
 <table>
-
 <tr>
 <th class="fixed">項番</th>
 <th class="fixed2">資産番号</th>
@@ -218,56 +220,125 @@ function resetForm(){
 <th>詳細</th>
 </tr>
 
+<c:set var="now" value="<%= new java.util.Date() %>" />
+<c:set var="limitDate" value="<%= new java.util.Date(System.currentTimeMillis() + 90L*24*60*60*1000) %>" />
+
 <c:forEach var="t" items="${list}" varStatus="st">
 <tr>
 <td class="fixed">${st.index+1}</td>
 <td class="fixed2">${t.assetNumber}</td>
 <td>${t.innoHin}</td>
 <td>${t.serialNumber}</td>
-
 <td><fmt:formatDate value="${t.contractDate}" pattern="yyyy/MM/dd"/></td>
-<td><fmt:formatDate value="${t.contractDate}" pattern="yyyy/MM/dd"/></td>
-<td><fmt:formatDate value="${t.terminationDate}" pattern="yyyy/MM/dd"/></td>
 
+<td>
+<c:choose>
+    <c:when test="${t.contractPeriod != null && t.contractPeriod <= limitDate}">
+        <span style="color:red;">
+            <fmt:formatDate value="${t.contractPeriod}" pattern="yyyy/MM/dd"/>
+        </span>
+    </c:when>
+    <c:otherwise>
+        <fmt:formatDate value="${t.contractPeriod}" pattern="yyyy/MM/dd"/>
+    </c:otherwise>
+</c:choose>
+</td>
+<td>
+    <fmt:formatDate value="${t.terminationDate}" pattern="yyyy/MM/dd"/>
+</td>
 <td>${t.tanka}</td>
 <td>${t.companyName}</td>
 <td>${t.departmentName}</td>
 <td>${t.ownerName}</td>
 <td><fmt:formatDate value="${t.distributionDate}" pattern="yyyy/MM/dd"/></td>
-
 <td><a href="detail?id=${t.id}">＞</a></td>
 </tr>
 </c:forEach>
-
 </table>
 </div>
 
 <div class="pager-area">
 <div class="pager">
 
-<a href="TerminalServlet?page=1">&lt;&lt;</a>
-
-<c:if test="${page > 1}">
-<a href="TerminalServlet?page=${page-1}">前へ</a>
-</c:if>
-
 [ ${page} / ${totalPage} ]
+<c:if test="${totalPage > 1}">
 
-<c:if test="${page < totalPage}">
-<a href="TerminalServlet?page=${page+1}">次へ</a>
+<c:set var="query">
+&company=${param.company}
+<c:forEach var="i" items="${paramValues.innoHin}">&innoHin=${i}</c:forEach>
+<c:forEach var="o" items="${paramValues.ownerName}">&ownerName=${o}</c:forEach>
+<c:if test="${param.includeTerminated != null}">&includeTerminated=on</c:if>
+<c:if test="${param.stockOnly != null}">&stockOnly=on</c:if>
+<c:if test="${param.replacementTarget != null}">&replacementTarget=on</c:if>
+</c:set>
+
+    <!-- 最初 -->
+    <c:if test="${page > 1}">
+        <a href="TerminalServlet?page=1${query}">&lt;&lt;</a>
+    </c:if>
+    <!-- 前 -->
+    <c:if test="${page > 1}">
+        <a href="TerminalServlet?page=${page-1}${query}">前へ</a>
+    </c:if>
+    <!-- 次 -->
+    <c:if test="${page < totalPage}">
+        <a href="TerminalServlet?page=${page+1}${query}">次へ</a>
+    </c:if>
+    <!-- 最後 -->
+    <c:if test="${page < totalPage}">
+        <a href="TerminalServlet?page=${totalPage}${query}">&gt;&gt;</a>
+    </c:if>
+    
 </c:if>
 
-<a href="TerminalServlet?page=${totalPage}">&gt;&gt;</a>
+<form action="TerminalServlet" method="get" style="text-align:center;">
+    <input type="number" name="page" min="1" max="${totalPage}" 
+           style="width:75px;" placeholder="ページ">
+    <!-- 条件保持 -->
+    <input type="hidden" name="company" value="${param.company}"/>
+    <c:forEach var="i" items="${paramValues.innoHin}">
+        <input type="hidden" name="innoHin" value="${i}"/>
+    </c:forEach>
+    <c:forEach var="o" items="${paramValues.ownerName}">
+        <input type="hidden" name="ownerName" value="${o}"/>
+    </c:forEach>
+    <c:if test="${param.includeTerminated != null}">
+        <input type="hidden" name="includeTerminated" value="on"/>
+    </c:if>
+    <c:if test="${param.stockOnly != null}">
+        <input type="hidden" name="stockOnly" value="on"/>
+    </c:if>
+    <c:if test="${param.replacementTarget != null}">
+        <input type="hidden" name="replacementTarget" value="on"/>
+    </c:if>
+    <button type="submit">移動</button>
+</form>
 
 </div>
 </div>
 
 <div class="excel-box">
-<form action="ExcelServlet" method="get">
+<form action="Terminal_Excel_Servlet" method="get">
+<input type="hidden" name="company" value="${param.company}" />
+<c:forEach var="i" items="${paramValues.innoHin}">
+  <input type="hidden" name="innoHin" value="${i}" />
+</c:forEach>
+<c:forEach var="o" items="${paramValues.ownerName}">
+  <input type="hidden" name="ownerName" value="${o}" />
+</c:forEach>
+<c:if test="${param.includeTerminated != null}">
+  <input type="hidden" name="includeTerminated" value="on" />
+</c:if>
+<c:if test="${param.stockOnly != null}">
+  <input type="hidden" name="stockOnly" value="on" />
+</c:if>
+<c:if test="${param.replacementTarget != null}">
+  <input type="hidden" name="replacementTarget" value="on" />
+</c:if>
 <button class="btn">Excel出力</button>
 </form>
 </div>
-
+</div>
 </div>
 
 <!-- フッター -->
@@ -279,14 +350,11 @@ function resetForm(){
   </div>
 </div>
 
-<!-- モーダル -->
+<!-- 検索モーダル -->
 <div id="modal" class="modal">
 <div class="modal-box">
-
 <div class="modal-header">検索</div>
-
 <form id="searchForm" action="TerminalServlet" method="get">
-
 <div class="modal-body">
 
 <div class="form-row">
@@ -294,7 +362,10 @@ function resetForm(){
 <select name="company">
 <option value="">--選択--</option>
 <c:forEach var="c" items="${companyList}">
-<option value="${c}">${c}</option>
+<option value="${c}" 
+<c:if test="${param.company == c}">selected</c:if>>
+${c}
+</option>
 </c:forEach>
 </select>
 </div>
@@ -303,7 +374,13 @@ function resetForm(){
 <label>イノテックス品番：</label>
 <select id="innoSelect" name="innoHin" multiple>
 <c:forEach var="i" items="${innoList}">
-<option value="${i}">${i}</option>
+<option value="${i}"
+<c:if test="${paramValues.innoHin != null 
+    && fn:contains(fn:join(paramValues.innoHin, ','), i)}">
+selected
+</c:if>>
+${i}
+</option>
 </c:forEach>
 </select>
 </div>
@@ -312,7 +389,13 @@ function resetForm(){
 <label>利用者名：</label>
 <select id="ownerSelect" name="ownerName" multiple>
 <c:forEach var="o" items="${ownerList}">
-<option value="${o}">${o}</option>
+<option value="${o}"
+<c:if test="${paramValues.ownerName != null 
+    && fn:contains(fn:join(paramValues.ownerName, ','), o)}">
+selected
+</c:if>>
+${o}
+</option>
 </c:forEach>
 </select>
 </div>
@@ -340,8 +423,6 @@ function resetForm(){
     <span class="slider"></span>
   </label>
 </div>
-
-
 </div>
 
 <div class="modal-footer">
@@ -349,16 +430,13 @@ function resetForm(){
 <button type="button" onclick="resetForm()">リセット</button>
 <button type="submit">検索</button>
 </div>
-
 </form>
-
 </div>
 </div>
 
 <!-- TomSelect 初期化 -->
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-
   new TomSelect("#innoSelect", {
     plugins:['remove_button'],
     placeholder:"--選択--",
@@ -367,7 +445,6 @@ document.addEventListener("DOMContentLoaded", function(){
     hideSelected:false,
     closeAfterSelect:false
   });
-
   new TomSelect("#ownerSelect", {
     plugins:['remove_button'],
     placeholder:"--選択--",
@@ -376,7 +453,6 @@ document.addEventListener("DOMContentLoaded", function(){
     hideSelected:false,
     closeAfterSelect:false
   });
-
 });
 </script>
 

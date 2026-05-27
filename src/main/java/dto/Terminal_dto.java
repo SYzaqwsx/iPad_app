@@ -10,7 +10,7 @@ public class Terminal_dto {
     private String serialNumber;
     private String innoHin;
     private Date contractDate;
-    private int contractPeriod;
+    private Date contractPeriod;
     private Date terminationDate;
     private int tanka;
 
@@ -40,8 +40,8 @@ public class Terminal_dto {
     public Date getContractDate() { return contractDate; }
     public void setContractDate(Date contractDate) { this.contractDate = contractDate; }
 
-    public int getContractPeriod() { return contractPeriod; }
-    public void setContractPeriod(int contractPeriod) { this.contractPeriod = contractPeriod; }
+    public Date getContractPeriod() { return contractPeriod; }
+    public void setContractPeriod(Date contractPeriod) { this.contractPeriod = contractPeriod; }
 
     public Date getTerminationDate() { return terminationDate; }
     public void setTerminationDate(Date terminationDate) { this.terminationDate = terminationDate; }
