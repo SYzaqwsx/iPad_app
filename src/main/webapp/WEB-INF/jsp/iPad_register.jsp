@@ -79,6 +79,23 @@
       display:flex; gap:.6rem; justify-content:flex-end; padding:.8rem .9rem;
       border-top:1px solid var(--border); background:#fafbfc;
     }
+    
+    .tile{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:15%;
+      text-decoration:none;
+      color:#fff;
+      background: var(--navy);
+      font-size:16px;
+      border-radius: var(--radius);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12);
+      transition: filter .12s ease, background .18s ease;
+    }
+    .tile:hover{ background: var(--navy-dark); filter: brightness(0.98); }
+    
+    
 
     @media (max-width: 720px){
       .form-grid{ grid-template-columns: 1fr; }
@@ -124,8 +141,8 @@
         </div>
 
         <div class="actions-row">
-          <button class="btn" type="submit">登録</button>
-          <button class="btn" type="button" id="openCsvModalBtn" aria-haspopup="dialog" aria-controls="csvModal">CSV一括登録</button>
+          <button class="tile" type="submit">登録</button>
+          <button class="tile" type="button" id="openCsvModalBtn" aria-haspopup="dialog" aria-controls="csvModal">CSV一括登録</button>
         </div>
 
         <%-- メッセージ --%>

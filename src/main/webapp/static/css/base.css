@@ -31,6 +31,16 @@ html, body{
   font-size: var(--base-font);
 }
 
+
+/* フォーム系も統一 */
+button,
+input,
+select,
+textarea{
+  font-family: inherit;
+}
+
+
 /* ---- 共通レイアウト ---- */
 .container{
   max-width: min(90vw, 1080px);
@@ -38,26 +48,37 @@ html, body{
   padding: 0 16px;
 }
 
-/* ---- 共通ボタン ---- */
-.btn{
-  display:inline-block;
-  border:none;
-  border-radius: var(--radius);
-  padding: .56rem 1rem;
-  cursor:pointer;
-  font-weight:600;
-  font-size:.95rem;
-  background: var(--navy);
-  color:#fff;
-}
-.btn:hover{ background: var(--navy-dark); }
-.btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-.btn.ghost{
+/* ---- 共通ボタン（統一デザイン） ---- */
+.btn,
+button,
+input[type="submit"]{
+  display:inline-block;
+  padding:4px 18px;
   background:#fff;
-  border:1px solid var(--border);
-  color:var(--text);
+  border:2px solid #bbb;
+  border-radius:8px;
+  color:#333;
+  font-size:.95rem;
+  cursor:pointer;
+  text-decoration:none;
+  transition: all .15s ease;
 }
+
+/* hover */
+.btn:hover,
+button:hover,
+input[type="submit"]:hover{
+  background:#ddd;
+}
+
+/* 無効 */
+.btn:disabled,
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
 
 /* ---- 共通メッセージ ---- */
 .note{ margin-top:.45rem; padding:.45rem .6rem; border-radius:var(--radius); }
@@ -114,7 +135,7 @@ html, body{
 .btn-soft{
   display:inline-block;
   padding:6px 18px;
-  background:#eee;
+  background:#fff;
   border:2px solid #bbb;
   border-radius:8px;
   color:#333;

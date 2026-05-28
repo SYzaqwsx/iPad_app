@@ -34,16 +34,21 @@ body{
 table{
     width:100%;
     min-width:1200px;
-    border-collapse:collapse;
+    border-collapse:separate;
+    border-spacing:0;
     background:#fff;
 }
 
-th, td{ white-space: nowrap; }
+
+
+th, td{
+    white-space: nowrap;
+    border:1px solid #ccc;   /* ← 統一 */
+}
 
 th{
     background:#083b65;
     color:#fff;
-    border:1px solid #fff;
     padding:6px;
     position:sticky;
     top:0;
@@ -58,10 +63,24 @@ td{
 
 /* 固定列 */
 th.fixed{ left:0; z-index:6;}
-th.fixed2{ left:40px; z-index:6;}
+th.fixed2{ left:43px; z-index:6;}
+td.fixed{
+  position:sticky;
+  left:0;
+  background:#fff;
+  border-right:1px solid #ccc;
+  border-bottom:1px solid #ccc;
+  z-index:3;
+}
+td.fixed2{
+  position:sticky;
+  left:43px;
+  background:#fff;
+  border-right:1px solid #ccc;
+  border-bottom:1px solid #ccc;
+  z-index:3;
+}
 
-td.fixed{ position:sticky; left:0; background:#fff; }
-td.fixed2{ position:sticky; left:43px; background:#fff; }
 
 /* ===== ページネーション ===== */
 .pager-area{
@@ -108,10 +127,15 @@ td.fixed2{ position:sticky; left:43px; background:#fff; }
 
 .modal-body{ padding:20px; }
 
+
 .modal-footer{
-    background:#083b65;
-    padding:15px;
-    text-align:center;
+  background:#083b65;
+  padding:15px;
+  text-align:center;
+
+  display:flex;
+  justify-content:center;
+  gap:17%;
 }
 
 /* 入力フォーム */
@@ -175,9 +199,16 @@ td.fixed2{ position:sticky; left:43px; background:#fff; }
   transform: translateX(22px);
 }
 
+/* 解約済みレコードの背景はグレーにする */
 .terminated {
     background-color:#e0e0e0;
 }
+
+.terminated td.fixed,
+.terminated td.fixed2{
+    background-color:#e0e0e0;
+}
+
 </style>
 
 <script>
@@ -197,7 +228,7 @@ function resetForm(){
 <header class="topbar">
   <div class="topbar__inner">
     <div class="topbar__title">iPad台帳システム</div>
-    <button onclick="openModal()">検索</button>
+    <button class="btn-soft" onclick="openModal()">検索</button>
   </div>
 </header>
 
@@ -224,7 +255,7 @@ function resetForm(){
 <c:set var="limitDate" value="<%= new java.util.Date(System.currentTimeMillis() + 90L*24*60*60*1000) %>" />
 
 <c:forEach var="t" items="${list}" varStatus="st">
-<tr>
+<tr class="${t.terminationDate != null ? 'terminated' : ''}">
 <td class="fixed">${st.index+1}</td>
 <td class="fixed2">${t.assetNumber}</td>
 <td>${t.innoHin}</td>
@@ -426,10 +457,11 @@ ${o}
 </div>
 
 <div class="modal-footer">
-<button type="button" onclick="closeModal()">戻る</button>
-<button type="button" onclick="resetForm()">リセット</button>
-<button type="submit">検索</button>
+  <button type="button" class="btn-soft" onclick="closeModal()">戻る</button>
+  <button type="button" class="btn-soft" onclick="resetForm()">リセット</button>
+  <button type="submit" class="btn-soft">検索</button>
 </div>
+
 </form>
 </div>
 </div>

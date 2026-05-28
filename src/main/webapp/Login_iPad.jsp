@@ -57,6 +57,22 @@
       width:180px; height:44px;
       margin-top: 44px; /* ← 調整箇所 */
     }
+    
+    .tile{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:15%;
+      text-decoration:none;
+      color:#fff;
+      background: var(--navy);
+      font-size:16px;
+      border-radius: var(--radius);
+      box-shadow:0 4px 16px rgba(0,0,0,0.12);
+      transition: filter .12s ease, background .18s ease;
+    }
+    .tile:hover{ background: var(--navy-dark); filter: brightness(0.98); }
+    
 
     @media (max-width: 520px){
       .btn.login{ width: 100%; }
@@ -83,8 +99,9 @@
         <label class="form-label" for="password">パスワード</label>
         <input id="password" name="password" type="password" class="underline-input" required autocomplete="off">
 
-        <button type="submit" class="btn login">ログイン</button>
+      <button class="tile" style="margin-top: 3%";> ログイン</button>
       </form>
+
     </section>
   </main>
   <!-- 認証NG時はポップアップ -->

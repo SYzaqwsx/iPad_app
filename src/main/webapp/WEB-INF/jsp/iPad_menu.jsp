@@ -61,8 +61,10 @@
       <div class="user">
         <span><c:out value="${userName}" /></span>
         （権限: <span><c:out value="${roleId}" /></span>）
-        &nbsp;|&nbsp;
-        <a class="logout" href="${pageContext.request.contextPath}/Login_iPad.jsp">ログアウト</a>
+        <a class="logout btn-soft" href="${pageContext.request.contextPath}/Login_iPad.jsp">
+        ログアウト
+        </a>
+
       </div>
     </div>
   </header>
