@@ -69,4 +69,47 @@ public class MenuDao extends BaseDao {
 
         return list;
     }
+
+
+
+public boolean existsByRoleAndUrl(String roleId, String url) {
+
+    String sql = "SELECT COUNT(*) FROM m_menu WHERE role_id = ? AND ? LIKE CONCAT(menu_url, '%')";
+
+    // --- ログ ---
+    System.out.println("[SQL][MenuDao.existsByRoleAndUrl] " + sql);
+    System.out.println("[SQL][MenuDao.existsByRoleAndUrl] params: roleId=" + roleId + ", url=" + url);
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, roleId);
+        ps.setString(2, url);
+
+        long execStart = System.currentTimeMillis();
+
+        try (ResultSet rs = ps.executeQuery()) {
+            long execTook = System.currentTimeMillis() - execStart;
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+
+                System.out.println("[SQL][MenuDao.existsByRoleAndUrl] count=" + count +
+                                   " (query took " + execTook + " ms)");
+
+                return count > 0;
+            }
+        }
+
+    } catch (Exception e) {
+        System.out.println("[SQL][MenuDao.existsByRoleAndUrl] ERROR: " +
+                e.getClass().getSimpleName() + " - " + e.getMessage());
+        e.printStackTrace(System.out);
+        throw new RuntimeException("MenuDao.existsByRoleAndUrl error", e);
+    }
+
+    return false;
+}
+
+
 }

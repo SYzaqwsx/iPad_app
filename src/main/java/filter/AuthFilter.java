@@ -13,7 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebFilter("/*") // ★ 全リクエスト対象
+import dao.MenuDao;
+
+@WebFilter("/*")
 public class AuthFilter implements Filter {
 
     @Override
@@ -26,40 +28,79 @@ public class AuthFilter implements Filter {
         String uri = req.getRequestURI();
         String contextPath = req.getContextPath();
 
-        // ===== 除外URL（ログイン・静的リソース）=====
+        // =========================
+        // 除外（ログイン・静的ファイル）
+        // =========================
         if (uri.equals(contextPath + "/login")
                 || uri.endsWith("Login_iPad.jsp")
-                || uri.startsWith(contextPath + "/static/")) {
+                || uri.contains("login_success.jsp")
+                || uri.startsWith(contextPath + "/static/")
+                || uri.contains(".css")
+                || uri.contains(".js")
+                || uri.contains(".png")
+                || uri.contains(".jpg")) {
+
             chain.doFilter(request, response);
             return;
         }
 
-        // ===== セッションチェック =====
+        // =========================
+        // セッションチェック
+        // =========================
         HttpSession session = req.getSession(false);
 
-if (session == null) {
-    resp.sendRedirect(contextPath + "/Login_iPad.jsp");
-    return;
-}
-
-String roleId = (String) session.getAttribute("authRoleId");
-if (roleId == null) {
-    resp.sendRedirect(contextPath + "/Login_iPad.jsp");
-    return;
-}
-
-
-        String auth = (String) session.getAttribute("auth");
-
-        // ===== CSVアップロードは管理者のみ =====
-        if (uri.equals(contextPath + "/upload-csv")) {
-            if (!"99".equals(auth)) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
+        if (session == null) {
+            resp.sendRedirect(contextPath + "/Login_iPad.jsp");
+            return;
         }
 
-        // OKならServletへ
+        String roleId = (String) session.getAttribute("authRoleId");
+
+        if (roleId == null) {
+            resp.sendRedirect(contextPath + "/Login_iPad.jsp");
+            return;
+        }
+
+        // =========================
+        // パス取得（contextPath除去）
+        // =========================
+        String path = uri.substring(contextPath.length());
+
+        // ※クエリパラメータ除去（?以降）
+        if (path.contains("?")) {
+            path = path.substring(0, path.indexOf("?"));
+        }
+
+        // =========================
+        // 全員許可URL（メニュー画面など）
+        // =========================
+        if (path.equals("/Menu_Servlet")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // =========================
+        // デバッグログ
+        // =========================
+        System.out.println("[AuthFilter] URI=" + uri);
+        System.out.println("[AuthFilter] PATH=" + path);
+        System.out.println("[AuthFilter] ROLE=" + roleId);
+
+        // =========================
+        // DB権限チェック
+        // =========================
+        MenuDao dao = new MenuDao();
+        boolean allowed = dao.existsByRoleAndUrl(roleId, path);
+
+        if (!allowed) {
+            System.out.println("[AuthFilter] ACCESS DENIED");
+
+            // ★ forbiddenページへ
+            resp.sendRedirect(contextPath + "/error/forbidden.jsp");
+            return;
+        }
+
+        // OK
         chain.doFilter(request, response);
     }
 }
