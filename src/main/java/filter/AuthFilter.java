@@ -79,6 +79,13 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        if (path.equals("/Terminal_Excel_Servlet")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+
+
         // =========================
         // デバッグログ
         // =========================
