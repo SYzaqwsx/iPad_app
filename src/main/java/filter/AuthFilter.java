@@ -83,6 +83,10 @@ public class AuthFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
+        if (path.equals("/Terminal_Ibs_Excel_Servlet")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
 
 
