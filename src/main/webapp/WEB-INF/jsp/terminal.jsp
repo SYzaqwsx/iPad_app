@@ -61,6 +61,19 @@ td{
     padding:6px;
 }
 
+
+/* inno_hin に PMI を含む行は水色にする */
+.pmi-row{
+    background-color:#d9edf7;
+}
+
+/* 固定列も同じ色にする */
+.pmi-row td.fixed,
+.pmi-row td.fixed2{
+    background-color:#d9edf7;
+}
+
+
 /* 固定列 */
 th.fixed{ left:0; z-index:6;}
 th.fixed2{ left:43px; z-index:6;}
@@ -209,6 +222,17 @@ td.fixed2{
     background-color:#e0e0e0;
 }
 
+/* inno_hin に PMI を含む行は水色にする */
+.pmi-row{
+    background-color:#d9edf7;
+}
+
+.pmi-row td.fixed,
+.pmi-row td.fixed2{
+    background-color:#d9edf7;
+}
+
+
 </style>
 
 <script>
@@ -254,37 +278,52 @@ function resetForm(){
 <c:set var="now" value="<%= new java.util.Date() %>" />
 <c:set var="limitDate" value="<%= new java.util.Date(System.currentTimeMillis() + 90L*24*60*60*1000) %>" />
 
-<c:forEach var="t" items="${list}" varStatus="st">
-<tr class="${t.terminationDate != null ? 'terminated' : ''}">
-<td class="fixed">${st.index+1}</td>
-<td class="fixed2">${t.assetNumber}</td>
-<td>${t.innoHin}</td>
-<td>${t.serialNumber}</td>
-<td><fmt:formatDate value="${t.contractDate}" pattern="yyyy/MM/dd"/></td>
 
-<td>
-<c:choose>
-    <c:when test="${t.contractPeriod != null && t.contractPeriod <= limitDate}">
-        <span style="color:red;">
-            <fmt:formatDate value="${t.contractPeriod}" pattern="yyyy/MM/dd"/>
-        </span>
-    </c:when>
-    <c:otherwise>
-        <fmt:formatDate value="${t.contractPeriod}" pattern="yyyy/MM/dd"/>
-    </c:otherwise>
-</c:choose>
-</td>
-<td>
-    <fmt:formatDate value="${t.terminationDate}" pattern="yyyy/MM/dd"/>
-</td>
-<td>${t.tanka}</td>
-<td>${t.companyName}</td>
-<td>${t.departmentName}</td>
-<td>${t.ownerName}</td>
-<td><fmt:formatDate value="${t.distributionDate}" pattern="yyyy/MM/dd"/></td>
-<td><a href="detail?id=${t.id}">＞</a></td>
-</tr>
+<c:forEach var="t" items="${list}" varStatus="st">
+
+    <c:set var="rowClass" value="" />
+
+    <c:if test="${t.terminationDate != null}">
+        <c:set var="rowClass" value="${rowClass} terminated" />
+    </c:if>
+
+    <c:if test="${fn:contains(fn:toUpperCase(t.innoHin), 'PMI')}">
+        <c:set var="rowClass" value="${rowClass} pmi-row" />
+    </c:if>
+
+    <tr class="${rowClass}">
+        <td class="fixed">${st.index+1}</td>
+        <td class="fixed2">${t.assetNumber}</td>
+        <td>${t.innoHin}</td>
+        <td>${t.serialNumber}</td>
+        <td><fmt:formatDate value="${t.contractDate}" pattern="yyyy/MM/dd"/></td>
+
+        <td>
+            <c:choose>
+                <c:when test="${t.contractPeriod != null && t.contractPeriod <= limitDate}">
+                    <span style="color:red;">
+                        <fmt:formatDate value="${t.contractPeriod}" pattern="yyyy/MM/dd"/>
+                    </span>
+                </c:when>
+                <c:otherwise>
+                    <fmt:formatDate value="${t.contractPeriod}" pattern="yyyy/MM/dd"/>
+                </c:otherwise>
+            </c:choose>
+        </td>
+
+        <td>
+            <fmt:formatDate value="${t.terminationDate}" pattern="yyyy/MM/dd"/>
+        </td>
+        <td>${t.tanka}</td>
+        <td>${t.companyName}</td>
+        <td>${t.departmentName}</td>
+        <td>${t.ownerName}</td>
+        <td><fmt:formatDate value="${t.distributionDate}" pattern="yyyy/MM/dd"/></td>
+        <td><a href="detail?id=${t.id}">＞</a></td>
+    </tr>
+
 </c:forEach>
+
 </table>
 </div>
 
@@ -366,7 +405,7 @@ function resetForm(){
 <c:if test="${param.replacementTarget != null}">
   <input type="hidden" name="replacementTarget" value="on" />
 </c:if>
-<button class="btn">Excel出力</button>
+<button type="submit" class="btn-primary">Excel出力</button>
 </form>
 </div>
 </div>

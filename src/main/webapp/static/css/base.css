@@ -49,28 +49,97 @@ textarea{
 }
 
 
-/* ---- 共通ボタン（統一デザイン） ---- */
-.btn,
-button,
-input[type="submit"]{
-  display:inline-block;
-  padding:4px 18px;
-  background:#fff;
-  border:2px solid #bbb;
-  border-radius:8px;
-  color:#333;
+
+/* ---- 共通ボタン（土台だけ） ---- */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:6px 18px;
   font-size:.95rem;
   cursor:pointer;
   text-decoration:none;
   transition: all .15s ease;
+  border:1px solid transparent;
+  white-space:nowrap;
 }
 
 /* hover */
-.btn:hover,
-button:hover,
-input[type="submit"]:hover{
+.btn:hover{
+  opacity:.92;
+}
+
+/* 無効 */
+.btn:disabled,
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* ---- 白ボタン（検索 / メニューに戻る など） ---- */
+.btn-soft{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:6px 18px;
+  background:#fff;
+  border:2px solid #bbb;
+  border-radius:8px;
+  color:#333;
+  text-decoration:none;
+  cursor:pointer;
+  transition: all .15s ease;
+}
+
+.btn-soft:hover{
   background:#ddd;
 }
+
+/* ---- 紺ボタン（Excel出力 / 登録 / 実行系など） ---- */
+.btn-primary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:6px 18px;
+  background:#083b65;
+  border:2px solid #083b65;
+  color:#fff;
+  text-decoration:none;
+  cursor:pointer;
+  transition: all .15s ease;
+}
+
+.btn-primary:hover{
+  background:#062b49;
+  border-color:#062b49;
+}
+
+
+/* ---- 赤ボタン（削除） ---- */
+.btn-danger{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:6px 18px;
+  background:#d60000;
+  border:2px solid #d60000;
+  border-radius:0;
+  color:#fff;
+  text-decoration:none;
+  cursor:pointer;
+  transition: all .15s ease;
+  font-weight:700;
+}
+
+.btn-danger:hover{
+  background:#b50000;
+  border-color:#b50000;
+}
+
 
 /* 無効 */
 .btn:disabled,
