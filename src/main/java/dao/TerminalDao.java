@@ -37,7 +37,7 @@ public class TerminalDao extends BaseDao {
         sql.append("FROM terminal_management t ");
 
         // ✅ 最新ownerのみJOIN（これが超重要）
-        sql.append("INNER JOIN ( ");
+        sql.append("LEFT JOIN ( ");
         sql.append("  SELECT o1.* ");
         sql.append("  FROM owner_management o1 ");
         sql.append("  WHERE o1.distribution_date = ( ");
@@ -159,7 +159,7 @@ public class TerminalDao extends BaseDao {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) ");
         sql.append("FROM terminal_management t ");
-        sql.append("INNER JOIN ( ");
+        sql.append("LEFT JOIN ( ");
         sql.append("  SELECT o1.* ");
         sql.append("  FROM owner_management o1 ");
         sql.append("  WHERE o1.distribution_date = ( ");

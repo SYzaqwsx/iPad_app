@@ -148,7 +148,8 @@ td.fixed2{
 
   display:flex;
   justify-content:center;
-  gap:17%;
+  gap:16%;
+  flex-wrap:wrap; /* ← 保険 */
 }
 
 /* 入力フォーム */
@@ -319,7 +320,7 @@ function resetForm(){
         <td>${t.departmentName}</td>
         <td>${t.ownerName}</td>
         <td><fmt:formatDate value="${t.distributionDate}" pattern="yyyy/MM/dd"/></td>
-        <td><a href="detail?id=${t.id}">＞</a></td>
+        <td><a href="${pageContext.request.contextPath}/IPadDetailServlet?id=${t.id}">＞</a></td>
     </tr>
 
 </c:forEach>
@@ -420,90 +421,88 @@ function resetForm(){
   </div>
 </div>
 
+
 <!-- 検索モーダル -->
 <div id="modal" class="modal">
-<div class="modal-box">
-<div class="modal-header">検索</div>
-<form id="searchForm" action="TerminalServlet" method="get">
-<div class="modal-body">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header">検索</div>
 
-<div class="form-row">
-<label>会社名：</label>
-<select name="company">
-<option value="">--選択--</option>
-<c:forEach var="c" items="${companyList}">
-<option value="${c}" 
-<c:if test="${param.company == c}">selected</c:if>>
-${c}
-</option>
-</c:forEach>
-</select>
+    <form id="searchForm" action="TerminalServlet" method="get">
+      <div class="modal-body">
+
+        <div class="form-row">
+          <label>会社名：</label>
+          <select name="company">
+            <option value="">--選択--</option>
+            <c:forEach var="c" items="${companyList}">
+              <option value="${c}" <c:if test="${param.company == c}">selected</c:if>>
+                ${c}
+              </option>
+            </c:forEach>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>イノテックス品番：</label>
+          <select id="innoSelect" name="innoHin" multiple>
+            <c:forEach var="i" items="${innoList}">
+              <option value="${i}"
+                <c:if test="${paramValues.innoHin != null 
+                    && fn:contains(fn:join(paramValues.innoHin, ','), i)}">selected</c:if>>
+                ${i}
+              </option>
+            </c:forEach>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>利用者名：</label>
+          <select id="ownerSelect" name="ownerName" multiple>
+            <c:forEach var="o" items="${ownerList}">
+              <option value="${o}"
+                <c:if test="${paramValues.ownerName != null 
+                    && fn:contains(fn:join(paramValues.ownerName, ','), o)}">selected</c:if>>
+                ${o}
+              </option>
+            </c:forEach>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>解約済みも表示：</label>
+          <input type="checkbox" name="includeTerminated"
+            <c:if test="${param.includeTerminated != null}">checked</c:if>>
+        </div>
+
+        <div class="form-row">
+          <label>在庫のみ表示：</label>
+          <label class="switch">
+            <input type="checkbox" name="stockOnly"
+              <c:if test="${param.stockOnly != null}">checked</c:if>>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>定期入替対象：</label>
+          <label class="switch">
+            <input type="checkbox" name="replacementTarget"
+              <c:if test="${param.replacementTarget != null}">checked</c:if>>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-soft" onclick="closeModal()">戻る</button>
+        <button type="button" class="btn-soft" onclick="resetForm()">リセット</button>
+        <button type="submit" class="btn-soft">検索</button>
+      </div>
+    </form>
+  </div>
 </div>
 
-<div class="form-row">
-<label>イノテックス品番：</label>
-<select id="innoSelect" name="innoHin" multiple>
-<c:forEach var="i" items="${innoList}">
-<option value="${i}"
-<c:if test="${paramValues.innoHin != null 
-    && fn:contains(fn:join(paramValues.innoHin, ','), i)}">
-selected
-</c:if>>
-${i}
-</option>
-</c:forEach>
-</select>
-</div>
-
-<div class="form-row">
-<label>利用者名：</label>
-<select id="ownerSelect" name="ownerName" multiple>
-<c:forEach var="o" items="${ownerList}">
-<option value="${o}"
-<c:if test="${paramValues.ownerName != null 
-    && fn:contains(fn:join(paramValues.ownerName, ','), o)}">
-selected
-</c:if>>
-${o}
-</option>
-</c:forEach>
-</select>
-</div>
-
-<div class="form-row">
-  <label>解約済みも表示：</label>
-  <input type="checkbox" name="includeTerminated"
-    <c:if test="${param.includeTerminated != null}">checked</c:if>>
-</div>
-
-<div class="form-row">
-  <label>在庫のみ表示：</label>
-  <label class="switch">
-    <input type="checkbox" name="stockOnly"
-      <c:if test="${param.stockOnly != null}">checked</c:if>>
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="form-row">
-  <label>定期入替対象：</label>
-  <label class="switch">
-    <input type="checkbox" name="replacementTarget"
-      <c:if test="${param.replacementTarget != null}">checked</c:if>>
-    <span class="slider"></span>
-  </label>
-</div>
-</div>
-
-<div class="modal-footer">
-  <button type="button" class="btn-soft" onclick="closeModal()">戻る</button>
-  <button type="button" class="btn-soft" onclick="resetForm()">リセット</button>
-  <button type="submit" class="btn-soft">検索</button>
-</div>
-
-</form>
-</div>
-</div>
 
 <!-- TomSelect 初期化 -->
 <script>

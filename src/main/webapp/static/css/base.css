@@ -214,3 +214,184 @@ button:disabled{
 .btn-soft:hover{
   background:#ddd;
 }
+
+
+
+/* ========================================================================
+   共通モーダル
+   terminal.jsp の検索モーダル / CSV一括登録モーダルなどで共通利用
+   ======================================================================== */
+
+/* 背景 */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+/* モーダル本体 */
+.modal-box{
+  background:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+
+/* サイズ違い */
+.modal-box-sm{
+  width:520px;
+}
+
+.modal-box-md{
+  width:620px;
+  max-width:96vw;
+}
+
+/* ヘッダー */
+.modal-header{
+  background:var(--navy);
+  color:#fff;
+  padding:14px 18px;
+  font-size:20px;
+  font-weight:700;
+}
+
+/* 本文 */
+.modal-body{
+  padding:20px;
+  background:#fff;
+}
+
+/* CSV系など、背景グレーにしたい本文 */
+.modal-body-gray{
+  background:#ECECEC;
+  padding:42px;
+  min-height:180px;
+}
+
+/* フッター */
+.modal-footer{
+  background:var(--navy);
+  padding:15px 20px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:17%;
+}
+
+/* 右寄せや均等など用途別 */
+.modal-footer-between{
+  justify-content:space-between;
+  gap:16px;
+}
+
+.modal-footer-center{
+  justify-content:center;
+  gap:24px;
+}
+
+/* 入力行 */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.form-row label{
+  width:160px;
+  font-weight:bold;
+}
+
+/* CSVアップロード用 */
+.file-row{
+  display:block;
+  margin-bottom:18px;
+}
+
+.file-select-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:170px;
+  min-height:34px;
+  padding:6px 16px;
+  background:#fff;
+  border:2px solid #999;
+  border-radius:4px;
+  color:#333;
+  text-decoration:none;
+  cursor:pointer;
+  font-size:16px;
+  box-sizing:border-box;
+  transition: all .15s ease;
+}
+
+.file-select-btn:hover{
+  background:#f3f3f3;
+}
+
+.filename-wrap{
+  margin-top:18px;
+  font-size:16px;
+  color:#222;
+}
+
+.filename{
+  display:inline-block;
+  margin-left:6px;
+  color:#333;
+}
+
+/* モーダル内ボタン幅調整 */
+.modal-footer .btn-soft.small{
+  min-width:100px;
+}
+
+.modal-footer .btn-soft,
+.modal-footer .btn-primary{
+  min-width:auto;
+  justify-content:center;
+}
+
+/* モバイル */
+@media (max-width: 700px){
+  .modal-box-sm,
+  .modal-box-md{
+    width:96vw;
+  }
+
+  .modal-body{
+    padding:20px;
+  }
+
+  .modal-body-gray{
+    padding:24px 20px;
+    min-height:auto;
+  }
+
+  .modal-footer{
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .modal-footer .btn-soft,
+  .modal-footer .btn-primary,
+  .modal-footer .btn-soft.small{
+    width:100%;
+    min-width:auto;
+  }
+
+  .form-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .form-row label{
+    width:auto;
+    margin-bottom:6px;
+  }
+}
+

@@ -1,234 +1,502 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
 
-<html lang="ja">
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="dto.Register_dto" %>
+<%@ page import="java.util.List" %>
 
+<%!
+    private String h(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+%>
+
+<%
+    Register_dto form = (Register_dto) request.getAttribute("form");
+    if (form == null) {
+        form = new Register_dto();
+    }
+
+    String message = (String) request.getAttribute("message");
+    List<String> errors = (List<String>) request.getAttribute("errors");
+
+    String csvMessage = (String) request.getAttribute("csvMessage");
+    String csvError   = (String) request.getAttribute("csvError");
+
+    String assetNumber   = form.getAssetNumber();
+    String serialNumber  = form.getSerialNumber();
+    String innoHin       = form.getInnoHin();
+    String tel           = form.getTel();
+    String rentalCompany = form.getRentalCompany();
+    String udid          = form.getUdid();
+    String macAddress    = form.getMacAddress();
+
+    String contractDate =
+        (form.getContractDate() != null) ? form.getContractDate().toString() : "";
+    String contractPeriod =
+        (form.getContractPeriod() != null) ? form.getContractPeriod().toString() : "";
+    String tanka =
+        (form.getTanka() != null) ? form.getTanka().stripTrailingZeros().toPlainString() : "";
+
+    boolean openCsvModal = (csvMessage != null || csvError != null);
+%>
+
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>端末情報 登録フォーム</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>端末情報 登録フォーム</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- ▼ 共通CSS 読み込み -->
-  <link rel="stylesheet" href="<%= request.getContextPath() %>/static/css/base.css?v=20260218">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/static/css/base.css?v=20260218">
 
-  <!-- ▼ この画面だけの細かいスタイル（埋め込み） -->
-  <style>
-    .card{
-      background: var(--card);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(.5rem, .9vw, .7rem);
-      margin: clamp(.7rem, 1.4vw, .9rem) 0;
-    }
+    <style>
+    
+    
+html, body{
+    height:100%;
+    margin:0;
+}
 
-    /* 2列グリッド（左：ラベル/右：入力） */
-    .form-grid{
-      display:grid;
-      grid-template-columns: minmax(9rem, 26%) 1fr;
-      gap: clamp(.32rem, .8vw, .5rem);
-      align-items:center;
-    }
-    .cell.label{
-      background: var(--navy);
-      color:#fff;
-      padding:.48rem .6rem;
-      border-radius: var(--radius);
-      line-height:1.1; white-space:nowrap; display:flex; align-items:center;
-    }
-    .cell.input input{
-      width:100%;
-      padding:.48rem .6rem;
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      background:#fff; min-height:2rem; font-size:1rem;
-    }
-    .cell.input input:focus{
-      outline: 2px solid #9cc3ff;
-      border-color:#6aa0ee;
-    }
+body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+}
 
-    .actions-row{
-      display:flex; justify-content:space-between; align-items:center;
-      gap:.6rem; margin-top: 2%; /* 指示の通り +2% 余白 */
-    }
+.container{
+    flex:1;
+    width:100%;
+}
+    
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
 
-    .footer-actions{ margin: .9rem 0; text-align:left; }
+        .form-grid{
+            display:grid;
+            grid-template-columns: 118px 1fr 118px 1fr;
+            border-top:1px solid #a9a9a9;
+            border-left:1px solid #a9a9a9;
+            background:#dcdcdc;
+        }
 
-    /* CSVモーダル */
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,.45);
-      display:none; align-items:center; justify-content:center; z-index:999;
-    }
+        .cell{
+            border-right:1px solid #a9a9a9;
+            border-bottom:1px solid #a9a9a9;
+            min-height:46px;
+            box-sizing:border-box;
+        }
+
+        /* ← ここを base.css のボタン色と共通化 */
+        .cell.label{
+            background: var(--navy);
+            color:#ffffff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:700;
+            padding:0 .5rem;
+            text-align:center;
+            line-height:1.2;
+            white-space:nowrap;
+        }
+
+        .cell.input{
+            background:rgb(255, 255, 255);
+            display:flex;
+            align-items:center;
+            padding:4px 10px;
+        }
+
+        .cell.input input{
+            width:100%;
+            height:31px;
+            padding:0 .55rem;
+            border:1px solid #7e7e7e;
+            background:#ffffff;
+            font-size:14px;
+            box-sizing:border-box;
+        }
+
+        .cell.input input:focus{
+            outline:2px solid #9cc3ff;
+            border-color:#6aa0ee;
+        }
+
+        .span3{
+            grid-column: span 3;
+        }
+
+        .required{
+            color:#ff2b2b;
+            margin-left:2px;
+            font-weight:700;
+        }
+
+        .actions-row{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-top:18px;
+            gap:12px;
+        }
+
+        .footer-actions{
+            margin:18px 0 0 0;
+            text-align:left;
+        }
+
+        .actions-row .btn,
+        .actions-row .btn-soft,
+        .actions-row .btn-primary{
+            min-width:124px;
+        }
+
+        .note ul{
+            margin:0;
+            padding-left:1.2rem;
+        }
+
+        .note p{
+            margin:0;
+        }
+
+@media (max-width: 700px){
     .modal{
-      width:min(92vw, 560px);
-      background:#fff; border:1px solid var(--border);
-      border-radius:var(--radius); box-shadow:0 8px 28px rgba(0,0,0,.25);
-      overflow:hidden;
+        width: min(96vw, 620px);
     }
-    .modal-header{
-      background:var(--navy); color:#fff;
-      padding:.6rem .8rem; font-weight:700;
+
+    .modal-body{
+        padding: 24px 20px 28px 20px;
+        min-height: auto;
     }
-    .modal-body{ padding:.9rem; }
-    .modal-row{ margin:.5rem 0; color:var(--text); }
-    .file-row{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
-    .file-row input[type=file]{ font-size:.95rem; }
-    .filename{ color:var(--muted); font-size:.9rem; }
+
     .modal-actions{
-      display:flex; gap:.6rem; justify-content:flex-end; padding:.8rem .9rem;
-      border-top:1px solid var(--border); background:#fafbfc;
+        flex-direction: column;
+        align-items: stretch;
     }
-    
-    .tile{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:15%;
-      text-decoration:none;
-      color:#fff;
-      background: var(--navy);
-      font-size:16px;
-      border-radius: var(--radius);
-      box-shadow:0 4px 16px rgba(0,0,0,0.12);
-      transition: filter .12s ease, background .18s ease;
-    }
-    .tile:hover{ background: var(--navy-dark); filter: brightness(0.98); }
-    
-    
 
-    @media (max-width: 720px){
-      .form-grid{ grid-template-columns: 1fr; }
-      .actions-row{ flex-direction:column; align-items:stretch; }
-      .actions-row .btn{ width:100%; }
-      .modal-actions{ flex-direction:column; }
-      .modal-actions .btn{ width:100%; }
+    .modal-actions .btn-soft,
+    .modal-actions .btn-primary,
+    .modal-actions .btn-soft.small{
+        width: 100%;
+        min-width: auto;
     }
-  </style>
+}
+
+
+        @media (max-width: 900px){
+            .form-grid{
+                grid-template-columns: 1fr;
+            }
+
+            .span3{
+                grid-column: auto;
+            }
+
+            .actions-row{
+                flex-direction:column;
+                align-items:stretch;
+            }
+
+            .actions-row .btn,
+            .actions-row .btn-soft,
+            .actions-row .btn-primary{
+                width:100%;
+            }
+
+            .modal-actions{
+                flex-direction:column;
+            }
+
+            .modal-actions .btn,
+            .modal-actions .btn-soft,
+            .modal-actions .btn-primary{
+                width:100%;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <!-- ヘッダー（ログインと同じ見た目） -->
-  <header class="topbar">
-    <div class="topbar__inner">
-      <div class="topbar__title">端末情報 登録フォーム</div>
+    <header class="topbar">
+        <div class="topbar__inner">
+            <div class="topbar__title">端末情報 登録フォーム</div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="card">
+
+            <% if (message != null) { %>
+                <div class="note success">
+                    <p><%= h(message) %></p>
+                </div>
+            <% } %>
+
+            <% if (errors != null && !errors.isEmpty()) { %>
+                <div class="note error">
+                    <ul>
+                        <% for (String e : errors) { %>
+                            <li><%= h(e) %></li>
+                        <% } %>
+                    </ul>
+                </div>
+            <% } %>
+
+            <form method="post" action="<%= request.getContextPath() %>/IPad_register" novalidate>
+                <div class="form-grid">
+                    <label class="cell label" for="assetNo">資産番号</label>
+                    <div class="cell input span3">
+                        <input
+                            id="assetNo"
+                            name="assetNo"
+                            type="text"
+                            maxlength="100"
+                            value="<%= h(assetNumber) %>"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="serialNo">シリアル番号<span class="required">(*)</span></label>
+                    <div class="cell input span3">
+                        <input
+                            id="serialNo"
+                            name="serialNo"
+                            type="text"
+                            maxlength="100"
+                            value="<%= h(serialNumber) %>"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="indexNo">イノテックス品番</label>
+                    <div class="cell input span3">
+                        <input
+                            id="indexNo"
+                            name="indexNo"
+                            type="text"
+                            maxlength="100"
+                            value="<%= h(innoHin) %>"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="phoneNo">端末電話番号</label>
+                    <div class="cell input span3">
+                        <input
+                            id="phoneNo"
+                            name="phoneNo"
+                            type="text"
+                            maxlength="50"
+                            value="<%= h(tel) %>"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="contractDate">契約日<span class="required">(*)</span></label>
+                    <div class="cell input">
+                        <input
+                            id="contractDate"
+                            name="contractDate"
+                            type="date"
+                            value="<%= h(contractDate) %>">
+                    </div>
+
+                    <label class="cell label" for="expiryDate">契約満了日<span class="required">(*)</span></label>
+                    <div class="cell input">
+                        <input
+                            id="expiryDate"
+                            name="expiryDate"
+                            type="date"
+                            value="<%= h(contractPeriod) %>">
+                    </div>
+
+                    <label class="cell label" for="rentalCompany">レンタル会社</label>
+                    <div class="cell input span3">
+                        <input
+                            id="rentalCompany"
+                            name="rentalCompany"
+                            type="text"
+                            maxlength="100"
+                            value="<%= h(rentalCompany) %>"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="unitPrice">単価(円)<span class="required">(*)</span></label>
+                    <div class="cell input span3">
+                        <input
+                            id="unitPrice"
+                            name="unitPrice"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="20"
+                            value="<%= h(tanka) %>"
+                            placeholder="例）120000"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="udid">UDID</label>
+                    <div class="cell input span3">
+                        <input
+                            id="udid"
+                            name="udid"
+                            type="text"
+                            maxlength="100"
+                            value="<%= h(udid) %>"
+                            autocomplete="off">
+                    </div>
+
+                    <label class="cell label" for="macAddress">MACアドレス</label>
+                    <div class="cell input span3">
+                        <input
+                            id="macAddress"
+                            name="macAddress"
+                            type="text"
+                            maxlength="100"
+                            value="<%= h(macAddress) %>"
+                            autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">登録</button>
+                    <button
+                        class="btn btn-primary"
+                        type="button"
+                        id="openCsvModalBtn"
+                        aria-haspopup="dialog"
+                        aria-controls="csvModal">
+                        CSV一括登録
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <!-- フッター -->
+    <div class="footer">
+        <div class="footer-inner">
+            <a class="btn-soft" href="<%= request.getContextPath() %>/Menu_Servlet">
+                メニューに戻る
+            </a>
+        </div>
     </div>
-  </header>
 
-  <main class="container">
-    <!-- 単票登録 -->
-    <section class="card">
-      <!-- ★ 正しい form 開始タグ（POST & action の指定） -->
-      <form method="post" action="<%= request.getContextPath() %>/IPad_register" novalidate>
-        <div class="form-grid">
-          <label class="cell label" for="assetNo">資産番号</label>
-          <div class="cell input"><input id="assetNo" name="assetNo" type="text" required maxlength="100" autocomplete="off"></div>
+ 
 
-          <label class="cell label" for="indexNo">インデックス品番</label>
-          <div class="cell input"><input id="indexNo" name="indexNo" type="text" maxlength="100" autocomplete="off"></div>
+<!-- CSV モーダル -->
+<div id="csvBackdrop" class="modal" aria-hidden="true">
+    <div class="modal-box modal-box-md" role="dialog" aria-modal="true" aria-labelledby="csvModalTitle">
 
-          <label class="cell label" for="serialNo">シリアル番号</label>
-          <div class="cell input"><input id="serialNo" name="serialNo" type="text" maxlength="100" autocomplete="off"></div>
+        <div class="modal-header" id="csvModalTitle">CSV一括登録</div>
 
-          <label class="cell label" for="contractDate">契約日</label>
-          <div class="cell input"><input id="contractDate" name="contractDate" type="date" pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="yyyy/mm/dd"></div>
+        <form method="post"
+              action="<%= request.getContextPath() %>/IPad_CSV_register"
+              enctype="multipart/form-data"
+              id="csvForm">
 
-          <label class="cell label" for="expiryDate">契約満了日</label>
-          <div class="cell input"><input id="expiryDate" name="expiryDate" type="date" pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="yyyy/mm/dd"></div>
+            <div class="modal-body modal-body-gray">
+                <div class="file-row">
+                    <label class="file-select-btn" for="csvFile">ファイルの選択</label>
+                    <input id="csvFile" name="file" type="file" accept=".csv" required style="display:none;">
+                </div>
 
-          <label class="cell label" for="unitPrice">単価(円)</label>
-          <div class="cell input"><input id="unitPrice" name="unitPrice" type="text" inputmode="numeric" pattern="\\d+(\\.\\d{1,2})?" placeholder="例）120000"></div>
-        </div>
+                <div class="filename-wrap">
+                    アップロードファイル名：
+                    <span class="filename" id="csvFilename"></span>
+                </div>
 
-        <div class="actions-row">
-          <button class="tile" type="submit">登録</button>
-          <button class="tile" type="button" id="openCsvModalBtn" aria-haspopup="dialog" aria-controls="csvModal">CSV一括登録</button>
-        </div>
+                <% if (csvMessage != null) { %>
+                    <div class="note success" style="margin-top:20px;">
+                        <p><%= h(csvMessage) %></p>
+                    </div>
+                <% } %>
 
-        <%-- メッセージ --%>
-        <%
-          String msg = (String) request.getAttribute("message");
-          String err = (String) request.getAttribute("error");
-          if (msg != null) { %><p class="note success"><%= msg %></p><% }
-          if (err != null) { %><p class="note error"><%= err %></p><% }
-        %>
-      </form>
-    </section>
+                <% if (csvError != null) { %>
+                    <div class="note error" style="margin-top:20px;">
+                        <p><%= h(csvError) %></p>
+                    </div>
+                <% } %>
+            </div>
 
-    <div class="footer-actions">
-      <!-- ★ 正しいリンク -->
-      <a class="btn ghost" href="<%= request.getContextPath() %>/Menu_Servlet">メニューに戻る</a>
+            <div class="modal-footer modal-footer-between">
+                <button type="button" class="btn-soft small" id="closeCsvModalBtn">戻る</button>
+
+                <a class="btn-soft" href="<%= request.getContextPath() %>/CsvTemplate_Servlet">
+                    テンプレダウンロード
+                </a>
+
+                <button type="submit" class="btn-soft" id="csvUploadBtn" disabled>
+                    アップロード
+                </button>
+            </div>
+
+        </form>
     </div>
-  </main>
+</div>
 
-  <!-- CSV モーダルダイアログ -->
-  <div class="modal-backdrop" id="csvBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="csvModalTitle" id="csvModal">
-      <div class="modal-header" id="csvModalTitle">CSV一括登録</div>
 
-      <!-- ★ 正しい form（CSVアップロード用、POST & enctype 必須） -->
-      <form method="post" action="<%= request.getContextPath() %>/upload-csv" enctype="multipart/form-data" id="csvForm">
-        <div class="modal-body">
-          <div class="modal-row file-row">
-            <label class="btn ghost" for="csvFile">ファイルの選択</label>
-            <input id="csvFile" name="file" type="file" accept=".csv" required style="display:none;">
-            <span class="filename" id="csvFilename">アップロードファイル名：</span>
-          </div>
+    <script>
+        (function(){
+            const openBtn   = document.getElementById('openCsvModalBtn');
+            const closeBtn  = document.getElementById('closeCsvModalBtn');
+            const backdrop  = document.getElementById('csvBackdrop');
+            const fileInput = document.getElementById('csvFile');
+            const fileName  = document.getElementById('csvFilename');
+            const uploadBtn = document.getElementById('csvUploadBtn');
 
-          <%-- CSVアップロード結果メッセージ --%>
-          <%
-            String csvMsg = (String) request.getAttribute("csvMessage");
-            String csvErr = (String) request.getAttribute("csvError");
-            if (csvMsg != null) { %><p class="note success"><%= csvMsg %></p><% }
-            if (csvErr != null) { %><p class="note error"><%= csvErr %></p><% }
-          %>
-        </div>
+            function openModal(){
+                if (!backdrop) return;
+                backdrop.style.display = 'flex';
+                backdrop.removeAttribute('aria-hidden');
+                document.body.style.overflow = 'hidden';
+            }
 
-        <div class="modal-actions">
-          <button type="button" class="btn ghost" id="closeCsvModalBtn">戻る</button>
-          <a class="btn ghost" href="<%= request.getContextPath() %>/download-csv-template">テンプレダウンロード</a>
-          <button type="submit" class="btn" id="csvUploadBtn" disabled>アップロード</button>
-        </div>
-      </form>
-    </div>
-  </div>
+            function closeModal(){
+                if (!backdrop) return;
+                backdrop.style.display = 'none';
+                backdrop.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
 
-  <script>
-    // モーダルの簡易制御
-    (function(){
-      const openBtn   = document.getElementById('openCsvModalBtn');
-      const closeBtn  = document.getElementById('closeCsvModalBtn');
-      const backdrop  = document.getElementById('csvBackdrop');
-      const fileInput = document.getElementById('csvFile');
-      const fileName  = document.getElementById('csvFilename');
-      const uploadBtn = document.getElementById('csvUploadBtn');
+            if (openBtn) {
+                openBtn.addEventListener('click', openModal);
+            }
 
-      function openModal(){
-        if(!backdrop) return;
-        backdrop.style.display = 'flex';
-        backdrop.removeAttribute('aria-hidden');
-        document.body.style.overflow = 'hidden';
-        setTimeout(()=>document.querySelector('label[for="csvFile"]')?.focus(), 0);
-      }
-      function closeModal(){
-        if(!backdrop) return;
-        backdrop.style.display = 'none';
-        backdrop.setAttribute('aria-hidden','true');
-        document.body.style.overflow = '';
-        openBtn && openBtn.focus();
-      }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeModal);
+            }
 
-      openBtn && openBtn.addEventListener('click', openModal);
-      closeBtn && closeBtn.addEventListener('click', closeModal);
-      backdrop && backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop){ closeModal(); }});
-      document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && backdrop.style.display === 'flex'){ closeModal(); }});
+            if (backdrop) {
+                backdrop.addEventListener('click', function(e){
+                    if (e.target === backdrop) {
+                        closeModal();
+                    }
+                });
+            }
 
-      fileInput && fileInput.addEventListener('change', ()=>{
-        const f = fileInput.files && fileInput.files[0];
-        fileName.textContent = 'アップロードファイル名：' + (f ? f.name : '');
-        uploadBtn.disabled = !f;
-      });
-    })();
-  </script>
+            document.addEventListener('keydown', function(e){
+                if (e.key === 'Escape' && backdrop && backdrop.style.display === 'flex') {
+                    closeModal();
+                }
+            });
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function(){
+                    const f = fileInput.files && fileInput.files[0];
+                    fileName.textContent =  f ? f.name : '';
+                    uploadBtn.disabled = !f;
+                });
+            }
+
+            <% if (openCsvModal) { %>
+                openModal();
+            <% } %>
+        })();
+    </script>
 </body>
 </html>

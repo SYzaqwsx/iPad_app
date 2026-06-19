@@ -74,20 +74,14 @@ public class AuthFilter implements Filter {
         // =========================
         // 全員許可URL（メニュー画面など）
         // =========================
-        if (path.equals("/Menu_Servlet")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
-        if (path.equals("/Terminal_Excel_Servlet")) {
-            chain.doFilter(request, response);
-            return;
-        }
         if (path.equals("/Terminal_Ibs_Excel_Servlet")) {
             chain.doFilter(request, response);
             return;
         }
-
+        if (path.equals("/IPad_CSV_register")) {
+        	chain.doFilter(request, response);
+        	return;
+        }
 
 
         // =========================

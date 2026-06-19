@@ -1,3 +1,4 @@
+
 package dao;
 
 import java.sql.Connection;
@@ -10,26 +11,39 @@ import dto.Menu_dto;
 
 public class MenuDao extends BaseDao {
 
-    // 実行するSQL
-    private static final String SQL =
+    // メニュー表示用SQL（sys=0 のみ表示）
+    private static final String SQL_FIND_BY_ROLE_ID =
         "SELECT role_id, menu_id, menu_name, menu_url " +
-        "FROM m_menu WHERE role_id = ? ORDER BY menu_id";
+        "FROM m_menu " +
+        "WHERE role_id = ? " +
+        "  AND `sys` = 0 " +
+        "ORDER BY menu_id";
 
+    // 認可チェック用SQL（sysは見ない。0でも1でも許可対象）
+    private static final String SQL_EXISTS_BY_ROLE_AND_URL =
+        "SELECT COUNT(*) " +
+        "FROM m_menu " +
+        "WHERE role_id = ? " +
+        "  AND ? LIKE CONCAT(menu_url, '%')";
+
+    /**
+     * メニュー画面表示用
+     * sys = 0 のものだけ返す
+     */
     public List<Menu_dto> findByRoleId(String roleId) {
-        long start = System.currentTimeMillis(); // 全体時間の計測開始
+        long start = System.currentTimeMillis();
 
-        // --- ログ（SQL とパラメータ） ---
-        System.out.println("[SQL][MenuDao.findByRoleId] " + SQL);
+        System.out.println("[SQL][MenuDao.findByRoleId] " + SQL_FIND_BY_ROLE_ID);
         System.out.println("[SQL][MenuDao.findByRoleId] params: roleId=" + roleId);
 
         List<Menu_dto> list = new ArrayList<>();
 
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(SQL)) {
+             PreparedStatement ps = con.prepareStatement(SQL_FIND_BY_ROLE_ID)) {
 
             ps.setString(1, roleId);
 
-            long execStart = System.currentTimeMillis(); // 実行時間の計測開始
+            long execStart = System.currentTimeMillis();
             try (ResultSet rs = ps.executeQuery()) {
                 long execTook = System.currentTimeMillis() - execStart;
 
@@ -43,7 +57,6 @@ public class MenuDao extends BaseDao {
                     list.add(m);
                     count++;
 
-                    // 先頭数件だけ中身の一部を覗く（出し過ぎ防止）
                     if (count <= 3) {
                         System.out.println("[SQL][MenuDao.findByRoleId] row" + count +
                             " {role_id=" + m.getRoleId() +
@@ -53,15 +66,16 @@ public class MenuDao extends BaseDao {
                     }
                 }
 
-                // --- 実行結果のサマリ ---
                 System.out.println("[SQL][MenuDao.findByRoleId] rows=" + count +
                                    " (query took " + execTook + " ms)");
             }
+
         } catch (Exception e) {
             System.out.println("[SQL][MenuDao.findByRoleId] ERROR: " +
                                e.getClass().getSimpleName() + " - " + e.getMessage());
-            e.printStackTrace(System.out); // スタックトレースも出力
+            e.printStackTrace(System.out);
             throw new RuntimeException("MenuDao.findByRoleId error", e);
+
         } finally {
             long took = System.currentTimeMillis() - start;
             System.out.println("[SQL][MenuDao.findByRoleId] total took " + took + " ms");
@@ -70,46 +84,42 @@ public class MenuDao extends BaseDao {
         return list;
     }
 
+    /**
+     * 認可チェック用
+     * sys は見ない（0でも1でも許可対象）
+     */
+    public boolean existsByRoleAndUrl(String roleId, String url) {
+        System.out.println("[SQL][MenuDao.existsByRoleAndUrl] " + SQL_EXISTS_BY_ROLE_AND_URL);
+        System.out.println("[SQL][MenuDao.existsByRoleAndUrl] params: roleId=" + roleId + ", url=" + url);
 
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(SQL_EXISTS_BY_ROLE_AND_URL)) {
 
-public boolean existsByRoleAndUrl(String roleId, String url) {
+            ps.setString(1, roleId);
+            ps.setString(2, url);
 
-    String sql = "SELECT COUNT(*) FROM m_menu WHERE role_id = ? AND ? LIKE CONCAT(menu_url, '%')";
+            long execStart = System.currentTimeMillis();
 
-    // --- ログ ---
-    System.out.println("[SQL][MenuDao.existsByRoleAndUrl] " + sql);
-    System.out.println("[SQL][MenuDao.existsByRoleAndUrl] params: roleId=" + roleId + ", url=" + url);
+            try (ResultSet rs = ps.executeQuery()) {
+                long execTook = System.currentTimeMillis() - execStart;
 
-    try (Connection con = getConnection();
-         PreparedStatement ps = con.prepareStatement(sql)) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
 
-        ps.setString(1, roleId);
-        ps.setString(2, url);
+                    System.out.println("[SQL][MenuDao.existsByRoleAndUrl] count=" + count +
+                                       " (query took " + execTook + " ms)");
 
-        long execStart = System.currentTimeMillis();
-
-        try (ResultSet rs = ps.executeQuery()) {
-            long execTook = System.currentTimeMillis() - execStart;
-
-            if (rs.next()) {
-                int count = rs.getInt(1);
-
-                System.out.println("[SQL][MenuDao.existsByRoleAndUrl] count=" + count +
-                                   " (query took " + execTook + " ms)");
-
-                return count > 0;
+                    return count > 0;
+                }
             }
+
+        } catch (Exception e) {
+            System.out.println("[SQL][MenuDao.existsByRoleAndUrl] ERROR: " +
+                    e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace(System.out);
+            throw new RuntimeException("MenuDao.existsByRoleAndUrl error", e);
         }
 
-    } catch (Exception e) {
-        System.out.println("[SQL][MenuDao.existsByRoleAndUrl] ERROR: " +
-                e.getClass().getSimpleName() + " - " + e.getMessage());
-        e.printStackTrace(System.out);
-        throw new RuntimeException("MenuDao.existsByRoleAndUrl error", e);
+        return false;
     }
-
-    return false;
-}
-
-
 }

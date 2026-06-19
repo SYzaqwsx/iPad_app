@@ -17,7 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 
-@WebServlet("/download-csv-template")
+@WebServlet("/CsvTemplate_Servlet")
 public class CsvTemplate_Servlet extends HttpServlet {
 
     private static final String TEMPLATE_CLASSPATH = "/templates/ipad_template.csv";
