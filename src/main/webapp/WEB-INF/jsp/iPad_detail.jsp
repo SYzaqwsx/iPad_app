@@ -37,9 +37,12 @@
 
 
 <style>
- height:100%;    html, body{
-        margin:0;
-    }
+ 
+html, body{
+    height:100%;
+    margin:0;
+}
+
 
     body{
         min-height:100vh;
@@ -357,34 +360,56 @@
 
                     <div class="form-grid">
                         <div class="cell label">資産番号</div>
-                        <div class="cell input span3"><input type="text" name="assetNumber" value="<%= h(detail.getAssetNumber()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="assetNumber" value="<%= h(detail.getAssetNumber()) %>">
+                        </div>
 
                         <div class="cell label">シリアル番号</div>
-                        <div class="cell input span3"><input type="text" name="serialNumber" value="<%= h(detail.getSerialNumber()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="serialNumber" value="<%= h(detail.getSerialNumber()) %>">
+                        </div>
 
                         <div class="cell label">イノテックス品番</div>
-                        <div class="cell input span3"><input type="text" name="innoHin" value="<%= h(detail.getInnoHin()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="innoHin" value="<%= h(detail.getInnoHin()) %>">
+                        </div>
 
                         <div class="cell label">端末電話番号</div>
-                        <div class="cell input span3"><input type="text" name="tel" value="<%= h(detail.getTel()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="tel" value="<%= h(detail.getTel()) %>">
+                        </div>
 
                         <div class="cell label">契約日</div>
-                        <div class="cell input"><input type="date" name="contractDate" value="<%= detail.getContractDate() != null ? detail.getContractDate().toString() : "" %>"></div>
+                        <div class="cell input">
+                            <input type="date" name="contractDate"
+                                   value="<%= detail.getContractDate() != null ? detail.getContractDate().toString() : "" %>">
+                        </div>
 
                         <div class="cell label">契約満了日</div>
-                        <div class="cell input"><input type="date" name="contractPeriod" value="<%= detail.getContractPeriod() != null ? detail.getContractPeriod().toString() : "" %>"></div>
+                        <div class="cell input">
+                            <input type="date" name="contractPeriod"
+                                   value="<%= detail.getContractPeriod() != null ? detail.getContractPeriod().toString() : "" %>">
+                        </div>
 
                         <div class="cell label">レンタル会社</div>
-                        <div class="cell input span3"><input type="text" name="rentalCompany" value="<%= h(detail.getRentalCompany()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="rentalCompany" value="<%= h(detail.getRentalCompany()) %>">
+                        </div>
 
                         <div class="cell label">単価</div>
-                        <div class="cell input span3"><input type="text" name="tanka" value="<%= detail.getTanka() != null ? detail.getTanka() : "" %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="tanka" value="<%= detail.getTanka() != null ? detail.getTanka() : "" %>">
+                        </div>
 
                         <div class="cell label">UDID</div>
-                        <div class="cell input span3"><input type="text" name="udid" value="<%= h(detail.getUdid()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="udid" value="<%= h(detail.getUdid()) %>">
+                        </div>
 
                         <div class="cell label">MACアドレス</div>
-                        <div class="cell input span3"><input type="text" name="macAddress" value="<%= h(detail.getMacAddress()) %>"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="macAddress" value="<%= h(detail.getMacAddress()) %>">
+                        </div>
                     </div>
 
                     <div class="actions">
@@ -395,6 +420,15 @@
                 </form>
 
             <% } else if ("ownerAdd".equals(tab)) { %>
+                <%
+                    String selectedCompanyId = request.getParameter("companyId") != null ? request.getParameter("companyId") : "";
+                    String selectedDepartmentId = request.getParameter("departmentId") != null ? request.getParameter("departmentId") : "";
+                    String selectedEmployeeId = request.getParameter("employeeId") != null ? request.getParameter("employeeId") : "";
+                    String selectedDistributionDate = request.getParameter("distributionDate") != null ? request.getParameter("distributionDate") : "";
+                    String selectedLongRangeUser = request.getParameter("longRangeUser") != null ? request.getParameter("longRangeUser") : "";
+                    String selectedReturnDate = request.getParameter("returnDate") != null ? request.getParameter("returnDate") : "";
+                %>
+
                 <form method="post" action="<%= request.getContextPath() %>/IPadDetailServlet">
                     <input type="hidden" name="action" value="addOwner">
                     <input type="hidden" name="tab" value="ownerAdd">
@@ -408,44 +442,45 @@
                     <div class="form-grid">
                         <div class="cell label">会社</div>
                         <div class="cell input span3">
-                            <select name="companyId">
+                            <select name="companyId" id="companyId">
                                 <option value="">--選択--</option>
                                 <% for (String[] c : detail.getCompanyOptions()) { %>
-                                    <option value="<%= h(c[0]) %>"><%= h(c[1]) %></option>
+                                    <option value="<%= h(c[0]) %>"
+                                        <%= c[0].equals(selectedCompanyId) ? "selected" : "" %>>
+                                        <%= h(c[1]) %>
+                                    </option>
                                 <% } %>
                             </select>
                         </div>
 
                         <div class="cell label">部署</div>
                         <div class="cell input span3">
-                            <select name="departmentId">
+                            <select name="departmentId" id="departmentId">
                                 <option value="">--選択--</option>
-                                <% for (String[] d : detail.getDepartmentOptions()) { %>
-                                    <option value="<%= h(d[0]) %>"><%= h(d[1]) %></option>
-                                <% } %>
                             </select>
                         </div>
 
                         <div class="cell label">使用者</div>
                         <div class="cell input span3">
-                            <select name="employeeId">
+                            <select name="employeeId" id="employeeId">
                                 <option value="">--選択--</option>
-                                <% if (detail.getEmployeeOptions() != null) { %>
-                                    <% for (String[] e : detail.getEmployeeOptions()) { %>
-                                        <option value="<%= h(e[0]) %>"><%= h(e[1]) %></option>
-                                    <% } %>
-                                <% } %>
                             </select>
                         </div>
 
                         <div class="cell label">配付日</div>
-                        <div class="cell input span3"><input type="date" name="distributionDate"></div>
+                        <div class="cell input span3">
+                            <input type="date" name="distributionDate" value="<%= h(selectedDistributionDate) %>">
+                        </div>
 
                         <div class="cell label">LongRangeユーザ名</div>
-                        <div class="cell input span3"><input type="text" name="longRangeUser"></div>
+                        <div class="cell input span3">
+                            <input type="text" name="longRangeUser" value="<%= h(selectedLongRangeUser) %>">
+                        </div>
 
                         <div class="cell label">返品日</div>
-                        <div class="cell input span3"><input type="date" name="returnDate"></div>
+                        <div class="cell input span3">
+                            <input type="date" name="returnDate" value="<%= h(selectedReturnDate) %>">
+                        </div>
                     </div>
 
                     <div class="actions" style="justify-content:flex-end;">
@@ -454,71 +489,96 @@
                 </form>
 
             <% } else if ("ownerHistory".equals(tab)) { %>
-                <div class="history-wrap">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th class="col-company">会社名</th>
-                                <th class="col-department">部署名</th>
-                                <th class="col-owner">氏名</th>
-                                <th class="col-dist">配付日</th>
-                                <th class="col-return">返却日</th>
-                                <th class="col-doc">書類</th>
-                                <th class="col-tel">電話番号</th>
-                                <th class="col-longrange">LongRangeユーザ名</th>
-                                <th class="col-fault">故障有無</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (ownerHistory != null && !ownerHistory.isEmpty()) { %>
-                                <% for (Detail_dto hDto : ownerHistory) { %>
+                <form method="post" action="<%= request.getContextPath() %>/IPadDetailServlet">
+                    <input type="hidden" name="action" value="registerFault">
+                    <input type="hidden" name="tab" value="ownerHistory">
+                    <input type="hidden" name="id" value="<%= detail.getId() %>">
+
+                    <div class="history-wrap">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-company">会社名</th>
+                                    <th class="col-department">部署名</th>
+                                    <th class="col-owner">氏名</th>
+                                    <th class="col-dist">配付日</th>
+                                    <th class="col-return">返却日</th>
+                                    <th class="col-doc">書類</th>
+                                    <th class="col-tel">電話番号</th>
+                                    <th class="col-longrange">LongRangeユーザ名</th>
+                                    <th class="col-fault">故障有無</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (ownerHistory != null && !ownerHistory.isEmpty()) { %>
+                                    <% for (Detail_dto hDto : ownerHistory) { %>
+                                        <%
+                                            boolean hasReturnDate = hDto.getReturnDate() != null;
+                                            boolean alreadyFault = hDto.isFaultFlag();
+                                            boolean disableFaultCheck = hasReturnDate || alreadyFault;
+
+                                            String distributionDateStr = hDto.getDistributionDate() != null
+                                                    ? hDto.getDistributionDate().toString() : "";
+                                        %>
+                                        <tr>
+                                            <td><%= h(hDto.getCompanyName()) %></td>
+                                            <td><%= h(hDto.getDepartmentName()) %></td>
+                                            <td><%= h(hDto.getOwnerName()) %></td>
+                                            <td><%= h(distributionDateStr) %></td>
+                                            <td><%= h(hDto.getReturnDate() != null ? hDto.getReturnDate().toString() : "") %></td>
+                                            <td>
+                                                <button type="button"
+                                                        class="doc-link"
+                                                        onclick="openDocModal(
+                                                            '<%= h(hDto.getOwnerName()) %>',
+                                                            '<%= h(hDto.getSerialNumber()) %>',
+                                                            '<%= h(distributionDateStr) %>',
+                                                            '<%= h(hDto.getReceiptPdf()) %>',
+                                                            '<%= h(hDto.getReturnPdf()) %>',
+                                                            '<%= detail.getId() %>'
+                                                        )">
+                                                    書類
+                                                </button>
+                                            </td>
+                                            <td><%= h(hDto.getTel()) %></td>
+                                            <td><%= h(hDto.getLongRangeUser()) %></td>
+                                            <td>
+                                                <% if (alreadyFault) { %>
+                                                    <input type="checkbox"
+                                                           class="fault-check"
+                                                           checked
+                                                           disabled>
+                                                <% } else if (hasReturnDate) { %>
+                                                    <input type="checkbox"
+                                                           class="fault-check"
+                                                           disabled>
+                                                <% } else { %>
+                                                    <input type="checkbox"
+                                                           class="fault-check"
+                                                           name="faultTarget"
+                                                           value="<%= h(hDto.getEmployeeId()) %>|<%= h(distributionDateStr) %>">
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                <% } else { %>
                                     <tr>
-                                        <td><%= h(hDto.getCompanyName()) %></td>
-                                        <td><%= h(hDto.getDepartmentName()) %></td>
-                                        <td><%= h(hDto.getOwnerName()) %></td>
-                                        <td><%= h(hDto.getDistributionDate() != null ? hDto.getDistributionDate().toString() : "") %></td>
-                                        <td><%= h(hDto.getReturnDate() != null ? hDto.getReturnDate().toString() : "") %></td>
-                                        <td>
-                                            <button type="button"
-                                                    class="doc-link"
-                                                    onclick="openDocModal(
-                                                        '<%= h(hDto.getOwnerName()) %>',
-                                                        '<%= h(hDto.getSerialNumber()) %>',
-                                                        '<%= h(hDto.getDistributionDate() != null ? hDto.getDistributionDate().toString() : "") %>',
-                                                        '<%= h(hDto.getReceiptPdf()) %>',
-                                                        '<%= h(hDto.getReturnPdf()) %>',
-                                                        '<%= detail.getId() %>'
-                                                    )">
-                                                書類
-                                            </button>
-                                        </td>
-                                        <td><%= h(hDto.getTel()) %></td>
-                                        <td><%= h(hDto.getLongRangeUser()) %></td>
-                                        <td>
-                                            <input type="checkbox"
-                                                   class="fault-check"
-                                                   disabled
-                                                   <%= hDto.isFaultFlag() ? "checked" : "" %>>
-                                        </td>
+                                        <td colspan="9">履歴はありません。</td>
                                     </tr>
                                 <% } %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="9">履歴はありません。</td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
 
-                <div class="actions" style="justify-content:flex-end; margin-top:16px;">
-                    <button type="button" class="btn btn-primary">更新</button>
-                </div>
+                    <div class="actions" style="justify-content:flex-end; margin-top:16px;">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                    </div>
+                </form>
             <% } %>
         </div>
 
         <div style="margin-top:18px;">
-            <a class="btn-soft" href="<%= request.getContextPath() %>/Menu_Servlet">メニューに戻る</a>
+            <a class="btn-soft" href="<%= request.getContextPath() %>/TerminalServlet">戻る</a>
         </div>
     </main>
 
@@ -581,6 +641,7 @@
     </div>
 
     <script>
+        // ===== 書類モーダル =====
         function openDocModal(ownerName, serialNumber, distributionDate, receiptPdf, returnPdf, detailId){
             const modal = document.getElementById("docModal");
             const title = document.getElementById("docModalTitle");
@@ -681,15 +742,21 @@
             }
         }
 
-        document.getElementById("receiptFile").addEventListener("change", function(){
-            const f = this.files && this.files[0];
-            document.getElementById("receiptFileName").textContent = f ? f.name : "";
-        });
+        const receiptFile = document.getElementById("receiptFile");
+        if (receiptFile) {
+            receiptFile.addEventListener("change", function(){
+                const f = this.files && this.files[0];
+                document.getElementById("receiptFileName").textContent = f ? f.name : "";
+            });
+        }
 
-        document.getElementById("returnFile").addEventListener("change", function(){
-            const f = this.files && this.files[0];
-            document.getElementById("returnFileName").textContent = f ? f.name : "";
-        });
+        const returnFile = document.getElementById("returnFile");
+        if (returnFile) {
+            returnFile.addEventListener("change", function(){
+                const f = this.files && this.files[0];
+                document.getElementById("returnFileName").textContent = f ? f.name : "";
+            });
+        }
 
         document.addEventListener("keydown", function(e){
             const modal = document.getElementById("docModal");
@@ -704,6 +771,127 @@
                 closeDocModal();
             }
         });
+
+        // ===== 連動プルダウン =====
+        const departmentMaster = [
+        <% if (detail != null && detail.getDepartmentOptions() != null) {
+             for (int i = 0; i < detail.getDepartmentOptions().size(); i++) {
+                 String[] d = detail.getDepartmentOptions().get(i);
+        %>
+            {
+                companyId: "<%= h(d[0]) %>",
+                departmentId: "<%= h(d[1]) %>",
+                departmentName: "<%= h(d[2]) %>"
+            }<%= (i < detail.getDepartmentOptions().size() - 1) ? "," : "" %>
+        <%   }
+           } %>
+        ];
+
+        const employeeMaster = [
+        <% if (detail != null && detail.getEmployeeOptions() != null) {
+             for (int i = 0; i < detail.getEmployeeOptions().size(); i++) {
+                 String[] e = detail.getEmployeeOptions().get(i);
+        %>
+            {
+                companyId: "<%= h(e[0]) %>",
+                departmentId: "<%= h(e[1]) %>",
+                employeeId: "<%= h(e[2]) %>",
+                employeeName: "<%= h(e[3]) %>"
+            }<%= (i < detail.getEmployeeOptions().size() - 1) ? "," : "" %>
+        <%   }
+           } %>
+        ];
+
+        function resetSelect(select, placeholder){
+            if (!select) return;
+            select.innerHTML = "";
+            const opt = document.createElement("option");
+            opt.value = "";
+            opt.textContent = placeholder || "--選択--";
+            select.appendChild(opt);
+        }
+
+        function fillDepartmentOptions(companyId, selectedDepartmentId){
+            const departmentSelect = document.getElementById("departmentId");
+            const employeeSelect = document.getElementById("employeeId");
+
+            resetSelect(departmentSelect, "--選択--");
+            resetSelect(employeeSelect, "--選択--");
+
+            if (!companyId) {
+                return;
+            }
+
+            const filtered = departmentMaster.filter(d => d.companyId === companyId);
+
+            filtered.forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d.departmentId;
+                opt.textContent = d.departmentName;
+                if (selectedDepartmentId && d.departmentId === selectedDepartmentId) {
+                    opt.selected = true;
+                }
+                departmentSelect.appendChild(opt);
+            });
+        }
+
+        function fillEmployeeOptions(companyId, departmentId, selectedEmployeeId){
+            const employeeSelect = document.getElementById("employeeId");
+            resetSelect(employeeSelect, "--選択--");
+
+            if (!companyId || !departmentId) {
+                return;
+            }
+
+            const filtered = employeeMaster.filter(e =>
+                e.companyId === companyId && e.departmentId === departmentId
+            );
+
+            filtered.forEach(e => {
+                const opt = document.createElement("option");
+                opt.value = e.employeeId;
+                opt.textContent = e.employeeName;
+                if (selectedEmployeeId && e.employeeId === selectedEmployeeId) {
+                    opt.selected = true;
+                }
+                employeeSelect.appendChild(opt);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function(){
+            const companySelect = document.getElementById("companyId");
+            const departmentSelect = document.getElementById("departmentId");
+
+            const selectedCompanyId = "<%= request.getParameter("companyId") != null ? h(request.getParameter("companyId")) : "" %>";
+            const selectedDepartmentId = "<%= request.getParameter("departmentId") != null ? h(request.getParameter("departmentId")) : "" %>";
+            const selectedEmployeeId = "<%= request.getParameter("employeeId") != null ? h(request.getParameter("employeeId")) : "" %>";
+
+            if (companySelect && selectedCompanyId) {
+                companySelect.value = selectedCompanyId;
+                fillDepartmentOptions(selectedCompanyId, selectedDepartmentId);
+
+                if (selectedDepartmentId) {
+                    fillEmployeeOptions(selectedCompanyId, selectedDepartmentId, selectedEmployeeId);
+                }
+            }
+
+            if (companySelect) {
+                companySelect.addEventListener("change", function(){
+                    fillDepartmentOptions(this.value, "");
+                });
+            }
+
+            if (departmentSelect) {
+                departmentSelect.addEventListener("change", function(){
+                    fillEmployeeOptions(
+                        document.getElementById("companyId").value,
+                        this.value,
+                        ""
+                    );
+                });
+            }
+        });
     </script>
 </body>
+
 </html>

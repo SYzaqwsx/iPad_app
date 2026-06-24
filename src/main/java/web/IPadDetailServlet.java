@@ -180,6 +180,62 @@ public class IPadDetailServlet extends HttpServlet {
                 tab = "ownerAdd";
             }
 
+            if ("registerFault".equals(action)) {
+                Detail_dto terminal = dao.findTerminalById(id);
+
+                if (terminal == null) {
+                    errors.add("端末情報が取得できませんでした。");
+                } else {
+                    String[] faultTargets = req.getParameterValues("faultTarget");
+
+                    if (faultTargets == null || faultTargets.length == 0) {
+                        errors.add("故障対象が選択されていません。");
+                    } else {
+                        int insertCount = 0;
+
+                        for (String target : faultTargets) {
+                            if (target == null || target.isEmpty()) {
+                                continue;
+                            }
+
+                            String[] parts = target.split("\\|", -1);
+                            if (parts.length < 2) {
+                                continue;
+                            }
+
+                            String employeeId = trim(parts[0]);
+                            Date distributionDate = parseDate(parts[1]);
+
+                            if (employeeId == null || employeeId.isEmpty() || distributionDate == null) {
+                                continue;
+                            }
+
+                            // 返却済み行は登録不可
+                            if (dao.isReturnedOwner(terminal.getSerialNumber(), employeeId, distributionDate)) {
+                                continue;
+                            }
+
+                            // 既登録ならスキップ
+                            if (dao.existsFault(employeeId, terminal.getSerialNumber(), distributionDate)) {
+                                continue;
+                            }
+
+                            dao.insertFaultManagement(terminal, employeeId, distributionDate, loginUserId);
+                            insertCount++;
+                        }
+
+                        if (insertCount > 0) {
+                            req.setAttribute("message", insertCount + "件の故障情報を登録しました。");
+                        } else {
+                            errors.add("登録対象がありませんでした。");
+                        }
+                    }
+                }
+
+                tab = "ownerHistory";
+            }
+
+
         } catch (Exception e) {
             e.printStackTrace();
             errors.add("処理中にエラーが発生しました。");

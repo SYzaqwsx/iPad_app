@@ -75,76 +75,190 @@ public class DetailDao extends BaseDao {
         return list;
     }
 
+
     public List<String[]> getDepartmentList() {
         List<String[]> list = new ArrayList<>();
 
-        String sql = "SELECT department_id, department_name FROM department_management ORDER BY department_name";
-
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                list.add(new String[] {
-                    rs.getString("department_id"),
-                    rs.getString("department_name")
-                });
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return list;
-    }
-
-    public List<Detail_dto> findOwnerHistoryBySerialNumber(String serialNumber) {
-        List<Detail_dto> list = new ArrayList<>();
-
         String sql =
-            "SELECT o.serial_number, o.owner_num, o.owner_name, o.distribution_date, o.return_date, " +
-            "       o.longrange_usr, o.receipt_pdf, o.return_pdf, o.company_id, o.department_id, " +
-            "       cm.company_name, dm.department_name, " +
-            "       t.tel, t.is_fault_return " +
-            "FROM owner_management o " +
-            "LEFT JOIN company_management cm ON o.company_id = cm.company_id " +
-            "LEFT JOIN department_management dm ON o.department_id = dm.department_id " +
-            "LEFT JOIN terminal_management t ON o.serial_number = t.serial_number " +
-            "WHERE o.serial_number = ? " +
-            "ORDER BY o.distribution_date DESC";
+        "SELECT company_id, department_id, department_name " +
+        "FROM department_management " +
+        "ORDER BY department_name";
 
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+         PreparedStatement ps = con.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
 
-            ps.setString(1, serialNumber);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Detail_dto d = new Detail_dto();
-                    d.setSerialNumber(rs.getString("serial_number"));
-                    d.setOwnerNum(rs.getString("owner_num"));
-                    d.setOwnerName(rs.getString("owner_name"));
-                    d.setDistributionDate(rs.getDate("distribution_date"));
-                    d.setReturnDate(rs.getDate("return_date"));
-                    d.setLongRangeUser(rs.getString("longrange_usr"));
-                    d.setReceiptPdf(rs.getString("receipt_pdf"));
-                    d.setReturnPdf(rs.getString("return_pdf"));
-                    d.setCompanyId(rs.getString("company_id"));
-                    d.setDepartmentId(rs.getString("department_id"));
-                    d.setCompanyName(rs.getString("company_name"));
-                    d.setDepartmentName(rs.getString("department_name"));
-                    d.setTel(rs.getString("tel"));
-                    d.setFaultFlag("1".equals(rs.getString("is_fault_return")));
-                    list.add(d);
-                }
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+         while (rs.next()) {
+            list.add(new String[] {
+                rs.getString("company_id"),      // [0]
+                rs.getString("department_id"),   // [1]
+                rs.getString("department_name")  // [2]
+            });
         }
 
-        return list;
+    } catch (Exception e) {
+        throw new RuntimeException(e);
     }
+
+    return list;
+    }
+
+
+
+public List<Detail_dto> findOwnerHistoryBySerialNumber(String serialNumber) {
+    List<Detail_dto> list = new ArrayList<>();
+
+    String sql =
+        "SELECT o.serial_number, o.owner_num, o.owner_name, o.distribution_date, o.return_date, " +
+        "       o.longrange_usr, o.receipt_pdf, o.return_pdf, o.company_id, o.department_id, " +
+        "       cm.company_name, dm.department_name, " +
+        "       t.tel, " +
+        "       CASE WHEN EXISTS ( " +
+        "           SELECT 1 " +
+        "           FROM fault_management f " +
+        "           WHERE f.employee_id = o.owner_num " +
+        "             AND f.serial_number = o.serial_number " +
+        "             AND f.distribution_date = o.distribution_date " +
+        "       ) THEN '1' ELSE '0' END AS fault_flag " +
+        "FROM owner_management o " +
+        "LEFT JOIN company_management cm ON o.company_id = cm.company_id " +
+        "LEFT JOIN department_management dm ON o.department_id = dm.department_id " +
+        "LEFT JOIN terminal_management t ON o.serial_number = t.serial_number " +
+        "WHERE o.serial_number = ? " +
+        "ORDER BY o.distribution_date DESC";
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, serialNumber);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Detail_dto d = new Detail_dto();
+                d.setSerialNumber(rs.getString("serial_number"));
+                d.setOwnerNum(rs.getString("owner_num"));
+                d.setEmployeeId(rs.getString("owner_num"));
+                d.setOwnerName(rs.getString("owner_name"));
+                d.setDistributionDate(rs.getDate("distribution_date"));
+                d.setReturnDate(rs.getDate("return_date"));
+                d.setLongRangeUser(rs.getString("longrange_usr"));
+                d.setReceiptPdf(rs.getString("receipt_pdf"));
+                d.setReturnPdf(rs.getString("return_pdf"));
+                d.setCompanyId(rs.getString("company_id"));
+                d.setDepartmentId(rs.getString("department_id"));
+                d.setCompanyName(rs.getString("company_name"));
+                d.setDepartmentName(rs.getString("department_name"));
+                d.setTel(rs.getString("tel"));
+                d.setFaultFlag("1".equals(rs.getString("fault_flag")));
+                list.add(d);
+            }
+        }
+
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+
+    return list;
+}
+
+public boolean existsFault(String employeeId, String serialNumber, Date distributionDate) {
+    String sql =
+        "SELECT COUNT(*) " +
+        "FROM fault_management " +
+        "WHERE employee_id = ? " +
+        "  AND serial_number = ? " +
+        "  AND distribution_date = ?";
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, employeeId);
+        ps.setString(2, serialNumber);
+        ps.setDate(3, distributionDate);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+
+    return false;
+}
+
+public boolean isReturnedOwner(String serialNumber, String employeeId, Date distributionDate) {
+    String sql =
+        "SELECT COUNT(*) " +
+        "FROM owner_management " +
+        "WHERE serial_number = ? " +
+        "  AND owner_num = ? " +
+        "  AND distribution_date = ? " +
+        "  AND return_date IS NOT NULL";
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, serialNumber);
+        ps.setString(2, employeeId);
+        ps.setDate(3, distributionDate);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+
+    return false;
+}
+
+public int insertFaultManagement(Detail_dto terminal, String employeeId, Date distributionDate, String loginUserId) {
+    String sql =
+        "INSERT INTO fault_management (" +
+        " employee_id, asset_number, registration_date, serial_number, inno_hin, " +
+        " contract_date, termination_date, tanka, distribution_date, " +
+        " reserve1, reserve2, reserve3, reserve4, reserve5, " +
+        " reserve6, reserve7, reserve8, reserve9, reserve10, " +
+        " insert_date, insert_user, update_date, update_user" +
+        ") VALUES (" +
+        " ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, " +
+        " NULL, NULL, NULL, NULL, NULL, " +
+        " NULL, NULL, NULL, NULL, NULL, " +
+        " NOW(), ?, NOW(), ?" +
+        ")";
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, employeeId);
+        ps.setString(2, terminal.getAssetNumber());
+        ps.setString(3, terminal.getSerialNumber());
+        ps.setString(4, terminal.getInnoHin());
+        ps.setDate(5, terminal.getContractDate());
+        ps.setDate(6, terminal.getTerminationDate());
+        if (terminal.getTanka() != null) {
+            ps.setInt(7, terminal.getTanka());
+        } else {
+            ps.setNull(7, java.sql.Types.INTEGER);
+        }
+        ps.setDate(8, distributionDate);
+        ps.setString(9, loginUserId);
+        ps.setString(10, loginUserId);
+
+        return ps.executeUpdate();
+
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+}
+
+
 
     public int insertOwner(Detail_dto dto, String loginUserId) {
         String sql =
@@ -240,16 +354,17 @@ public class DetailDao extends BaseDao {
         List<String[]> list = new ArrayList<>();
 
         String sql =
-            "SELECT e1.employee_id, e1.employee_name " +
-            "FROM employee_management e1 " +
-            "WHERE e1.is_deleted = '0' " +
-            "  AND e1.start_date = ( " +
-            "    SELECT MAX(e2.start_date) " +
-            "    FROM employee_management e2 " +
-            "    WHERE e2.employee_id = e1.employee_id " +
-            "      AND e2.is_deleted = '0' " +
-            "  ) " +
-            "ORDER BY e1.employee_name";
+                "SELECT e1.company_id, e1.department_id, e1.employee_id, e1.employee_name " +
+                        "FROM employee_management e1 " +
+                        "WHERE e1.is_deleted = '0' " +
+                        "  AND e1.start_date = ( " +
+                        "    SELECT MAX(e2.start_date) " +
+                        "    FROM employee_management e2 " +
+                        "    WHERE e2.employee_id = e1.employee_id " +
+                        "      AND e2.is_deleted = '0' " +
+                        "  ) " +
+                        "ORDER BY e1.employee_name";
+
 
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -257,6 +372,8 @@ public class DetailDao extends BaseDao {
 
             while (rs.next()) {
                 list.add(new String[] {
+                    rs.getString("company_id"),
+                    rs.getString("department_id"),
                     rs.getString("employee_id"),
                     rs.getString("employee_name")
                 });
