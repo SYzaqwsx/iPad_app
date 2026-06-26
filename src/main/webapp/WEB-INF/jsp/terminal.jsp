@@ -15,6 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
 <style>
+
 /* ===== レイアウト ===== */
 html, body{
     height:100%;
@@ -39,11 +40,9 @@ table{
     background:#fff;
 }
 
-
-
 th, td{
     white-space: nowrap;
-    border:1px solid #ccc;   /* ← 統一 */
+    border:1px solid #ccc;
 }
 
 th{
@@ -61,22 +60,37 @@ td{
     padding:6px;
 }
 
+/* ===== 行背景色 ===== */
 
-/* inno_hin に PMI を含む行は水色にする */
-.pmi-row{
+/* PMI品番（水色） */
+.pmi-row td{
     background-color:#d9edf7;
 }
 
-/* 固定列も同じ色にする */
 .pmi-row td.fixed,
 .pmi-row td.fixed2{
     background-color:#d9edf7;
 }
 
+/* 解約済み（最優先：グレー） */
+.terminated td,
+.pmi-row.terminated td{
+    background-color:#e0e0e0;
+    color:#666;
+}
 
-/* 固定列 */
+.terminated td.fixed,
+.terminated td.fixed2,
+.pmi-row.terminated td.fixed,
+.pmi-row.terminated td.fixed2{
+    background-color:#e0e0e0;
+    color:#666;
+}
+
+/* ===== 固定列 ===== */
 th.fixed{ left:0; z-index:6;}
 th.fixed2{ left:43px; z-index:6;}
+
 td.fixed{
   position:sticky;
   left:0;
@@ -85,6 +99,7 @@ td.fixed{
   border-bottom:1px solid #ccc;
   z-index:3;
 }
+
 td.fixed2{
   position:sticky;
   left:43px;
@@ -93,7 +108,6 @@ td.fixed2{
   border-bottom:1px solid #ccc;
   z-index:3;
 }
-
 
 /* ===== ページネーション ===== */
 .pager-area{
@@ -114,7 +128,6 @@ td.fixed2{
     display:flex;
     justify-content:flex-end;
 }
-
 
 /* ===== 検索モーダル ===== */
 .modal{
@@ -140,19 +153,17 @@ td.fixed2{
 
 .modal-body{ padding:20px; }
 
-
 .modal-footer{
   background:#083b65;
   padding:15px;
   text-align:center;
-
   display:flex;
   justify-content:center;
   gap:16%;
-  flex-wrap:wrap; /* ← 保険 */
+  flex-wrap:wrap;
 }
 
-/* 入力フォーム */
+/* ===== 入力フォーム ===== */
 .form-row{
     display:flex;
     align-items:center;
@@ -163,7 +174,6 @@ td.fixed2{
     width:160px;
     font-weight:bold;
 }
-
 
 /* ===== トグルスイッチ ===== */
 .switch {
@@ -212,27 +222,6 @@ td.fixed2{
 .switch input:checked + .slider:before {
   transform: translateX(22px);
 }
-
-/* 解約済みレコードの背景はグレーにする */
-.terminated {
-    background-color:#e0e0e0;
-}
-
-.terminated td.fixed,
-.terminated td.fixed2{
-    background-color:#e0e0e0;
-}
-
-/* inno_hin に PMI を含む行は水色にする */
-.pmi-row{
-    background-color:#d9edf7;
-}
-
-.pmi-row td.fixed,
-.pmi-row td.fixed2{
-    background-color:#d9edf7;
-}
-
 
 </style>
 
