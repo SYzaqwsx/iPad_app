@@ -232,9 +232,63 @@ function openModal(){
 function closeModal(){
     document.getElementById("modal").style.display="none";
 }
+
+
 function resetForm(){
-    document.getElementById("searchForm").reset();
+
+    const form = document.getElementById("searchForm");
+
+    // 通常フォーム項目を明示的に初期化
+    form.reset();
+
+    // 会社名
+    const companySelect = form.querySelector('select[name="company"]');
+    if (companySelect) {
+        companySelect.value = "";
+    }
+
+    // イノテックス品番 TomSelect
+    const innoSelect = document.getElementById("innoSelect");
+    if (innoSelect && innoSelect.tomselect) {
+        innoSelect.tomselect.clear(true);
+    }
+
+    // 利用者名 TomSelect
+    const ownerSelect = document.getElementById("ownerSelect");
+    if (ownerSelect && ownerSelect.tomselect) {
+        ownerSelect.tomselect.clear(true);
+    }
+
+    // hidden/option側の selected 状態も明示的に外す
+    if (innoSelect) {
+        Array.from(innoSelect.options).forEach(function(opt){
+            opt.selected = false;
+        });
+    }
+
+    if (ownerSelect) {
+        Array.from(ownerSelect.options).forEach(function(opt){
+            opt.selected = false;
+        });
+    }
+
+    // チェックボックス系
+    const includeTerminated = form.querySelector('input[name="includeTerminated"]');
+    if (includeTerminated) {
+        includeTerminated.checked = false;
+    }
+
+    const stockOnly = form.querySelector('input[name="stockOnly"]');
+    if (stockOnly) {
+        stockOnly.checked = false;
+    }
+
+    const replacementTarget = form.querySelector('input[name="replacementTarget"]');
+    if (replacementTarget) {
+        replacementTarget.checked = false;
+    }
 }
+
 </script>
 </head>
 

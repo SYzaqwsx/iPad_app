@@ -49,6 +49,19 @@ public class IPad_register extends HttpServlet {
         String udid            = trim(req.getParameter("udid"));
         String macAddress      = trim(req.getParameter("macAddress"));
 
+        System.out.println("[IPad_register] doPost start");
+        System.out.println("[IPad_register] params:"
+                + " assetNumber=" + assetNumber
+                + ", serialNumber=" + serialNumber
+                + ", innoHin=" + innoHin
+                + ", tel=" + tel
+                + ", contractDate=" + contractDateStr
+                + ", contractEnd=" + contractEndStr
+                + ", rentalCompany=" + rentalCompany
+                + ", tanka=" + tankaStr
+                + ", udid=" + udid
+                + ", macAddress=" + macAddress);
+
         List<String> errors = new ArrayList<>();
 
         // 必須チェック
@@ -69,6 +82,12 @@ public class IPad_register extends HttpServlet {
         Date contractPeriod = null;
         BigDecimal tanka = null;
 
+        // 端末電話番号：入力がある場合は数字のみ
+        if (!isBlank(tel) && !tel.matches("^[0-9]+$")) {
+            errors.add("端末電話番号は数字のみで入力してください。");
+        }
+
+        // 契約日
         if (!isBlank(contractDateStr)) {
             try {
                 contractDate = Date.valueOf(contractDateStr);
@@ -77,6 +96,7 @@ public class IPad_register extends HttpServlet {
             }
         }
 
+        // 契約満了日
         if (!isBlank(contractEndStr)) {
             try {
                 contractPeriod = Date.valueOf(contractEndStr);
@@ -85,18 +105,21 @@ public class IPad_register extends HttpServlet {
             }
         }
 
-        if (contractDate != null && contractPeriod != null && contractPeriod.before(contractDate)) {
-            errors.add("契約満了日は契約日以降を入力してください。");
+        // 契約満了日は契約日より後のみOK
+        // beforeだけだと「同日」が通ってしまうため、afterで判定
+        if (contractDate != null && contractPeriod != null && !contractPeriod.after(contractDate)) {
+            errors.add("契約満了日は契約日より後の日付を入力してください。");
         }
 
+        // 単価：整数のみOK
+        // カンマは許容して除去するが、小数・マイナス・英字・記号はNG
         if (!isBlank(tankaStr)) {
-            try {
-                tanka = new BigDecimal(tankaStr.replace(",", ""));
-                if (tanka.compareTo(BigDecimal.ZERO) < 0) {
-                    errors.add("単価は0以上を入力してください。");
-                }
-            } catch (NumberFormatException e) {
-                errors.add("単価は数値で入力してください。");
+            String normalizedTanka = tankaStr.replace(",", "");
+
+            if (!normalizedTanka.matches("^[0-9]+$")) {
+                errors.add("単価は整数で入力してください。");
+            } else {
+                tanka = new BigDecimal(normalizedTanka);
             }
         }
 
@@ -115,6 +138,7 @@ public class IPad_register extends HttpServlet {
         req.setAttribute("form", form);
 
         if (!errors.isEmpty()) {
+            System.out.println("[IPad_register] validation errors=" + errors);
             req.setAttribute("errors", errors);
             req.getRequestDispatcher(JSP_PATH).forward(req, resp);
             return;
@@ -123,7 +147,6 @@ public class IPad_register extends HttpServlet {
         try {
             HttpSession session = req.getSession(false);
 
-            // ここは実際のセッション格納名に合わせて変更してください
             String loginUserId = null;
             if (session != null) {
                 Object userIdObj = session.getAttribute("authUserId");
@@ -141,16 +164,15 @@ public class IPad_register extends HttpServlet {
 
             RegisterDao dao = new RegisterDao();
 
-            // 必要なら重複チェック
-            if (dao.existsByAssetNumber(assetNumber)) {
-                errors.add("この資産番号は既に登録されています。");
+            // シリアル番号重複チェック
+            if (dao.existsBySerialNumber(serialNumber)) {
+                errors.add("このシリアル番号は既に登録されています。");
                 req.setAttribute("errors", errors);
                 req.getRequestDispatcher(JSP_PATH).forward(req, resp);
                 return;
             }
 
             int result = dao.insert(form, loginUserId);
-            // int result = dao.insertWithManualId(form, loginUserId); // 手動ID採番にするならこちら
 
             if (result > 0) {
                 req.setAttribute("message", "登録が完了しました。");
@@ -161,11 +183,15 @@ public class IPad_register extends HttpServlet {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("[IPad_register] ERROR: "
+                    + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace(System.out);
+
             errors.add("システムエラーが発生しました。管理者にお問い合わせください。");
             req.setAttribute("errors", errors);
         }
 
+        System.out.println("[IPad_register] doPost end");
         req.getRequestDispatcher(JSP_PATH).forward(req, resp);
     }
 

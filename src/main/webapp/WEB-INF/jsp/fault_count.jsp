@@ -1,6 +1,7 @@
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List" %>
+<%@ page import="java.net.URLEncoder" %>
 <%@ page import="dto.Fault_count_row_dto" %>
 
 <%!
@@ -11,6 +12,15 @@
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
+    }
+
+    private String u(String s) {
+        try {
+            if (s == null) return "";
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private int i(Object o, int def) {
@@ -70,9 +80,11 @@
         }
 
         .topbar__inner.topbar__inner--double {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
         }
 
         .topbar-title-wrap {
@@ -217,7 +229,7 @@
             padding: 14px 30px;
         }
 
-        /* ===== 検索モーダル（一覧画面寄せ） ===== */
+        /* ===== 検索モーダル ===== */
         .modal {
             display: none;
             position: fixed;
@@ -274,17 +286,15 @@
         }
 
         .modal-footer {
-            background: #083b65;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
+
+    background:#083b65;
+    padding:16px 20px;
+    display:flex;
+    justify-content:center;
+    gap:60px;
+
         }
 
-        .modal-footer-right {
-            display: flex;
-            gap: 12px;
-        }
     </style>
 </head>
 
@@ -304,9 +314,9 @@
     <div class="fault-wrap">
 
         <div class="year-nav">
-            <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year - 1 %>&companyId=<%= h(companyId) %>&departmentId=<%= h(departmentId) %>&page=1">◀</a>
+            <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year - 1 %>&amp;companyId=<%= u(companyId) %>&amp;departmentId=<%= u(departmentId) %>&amp;page=1">◀</a>
             <span><%= year %>年</span>
-            <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year + 1 %>&companyId=<%= h(companyId) %>&departmentId=<%= h(departmentId) %>&page=1">▶</a>
+            <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year + 1 %>&amp;companyId=<%= u(companyId) %>&amp;departmentId=<%= u(departmentId) %>&amp;page=1">▶</a>
         </div>
 
         <div class="hint">＞押下で詳細を表示</div>
@@ -349,7 +359,9 @@
                         <td class="col-count"><%= row.getFaultCount() %></td>
                         <td class="col-link">
                             <a class="detail-link"
-                               href="<%= request.getContextPath() %>/FaultCountDetailServlet?year=<%= year %>&employeeId=<%= h(row.getEmployeeId()) %>">＞</a>
+                               href="<%= request.getContextPath() %>/FaultDetail_Servlet?year=<%= year %>&amp;companyId=<%= u(row.getCompanyId()) %>&amp;departmentId=<%= u(row.getDepartmentId()) %>&amp;employeeId=<%= u(row.getEmployeeId()) %>">
+                                ＞
+                            </a>
                         </td>
                     </tr>
                 <%
@@ -370,19 +382,19 @@
 
         <div class="pager-line">
             <% if (pageNo > 1) { %>
-                <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year %>&companyId=<%= h(companyId) %>&departmentId=<%= h(departmentId) %>&page=<%= pageNo - 1 %>">≪ 前へ</a>
+                <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year %>&amp;companyId=<%= u(companyId) %>&amp;departmentId=<%= u(departmentId) %>&amp;page=<%= pageNo - 1 %>">≪ 前へ</a>
             <% } %>
 
             <% for (int p = 1; p <= totalPages; p++) { %>
                 <% if (p == pageNo) { %>
                     <span class="current">[<%= p %>]</span>
                 <% } else { %>
-                    <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year %>&companyId=<%= h(companyId) %>&departmentId=<%= h(departmentId) %>&page=<%= p %>"><%= p %></a>
+                    <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year %>&amp;companyId=<%= u(companyId) %>&amp;departmentId=<%= u(departmentId) %>&amp;page=<%= p %>"><%= p %></a>
                 <% } %>
             <% } %>
 
             <% if (pageNo < totalPages) { %>
-                <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year %>&companyId=<%= h(companyId) %>&departmentId=<%= h(departmentId) %>&page=<%= pageNo + 1 %>">次へ ≫</a>
+                <a href="<%= request.getContextPath() %>/FaultCount_Servlet?year=<%= year %>&amp;companyId=<%= u(companyId) %>&amp;departmentId=<%= u(departmentId) %>&amp;page=<%= pageNo + 1 %>">次へ ≫</a>
             <% } %>
         </div>
 
@@ -441,11 +453,8 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn-soft" onclick="closeModal()">戻る</button>
-
-                <div class="modal-footer-right">
                     <button type="button" class="btn-soft" onclick="resetForm()">リセット</button>
                     <button type="submit" class="btn-soft">フィルター適用</button>
-                </div>
             </div>
         </form>
     </div>
@@ -454,13 +463,13 @@
 <script>
     const departmentMaster = [
     <% if (departmentOptions != null) {
-         for (int i = 0; i < departmentOptions.size(); i++) {
-             String[] d = departmentOptions.get(i); %>
+         for (int idx = 0; idx < departmentOptions.size(); idx++) {
+             String[] d = departmentOptions.get(idx); %>
         {
             companyId: "<%= h(d[0]) %>",
             departmentId: "<%= h(d[1]) %>",
             departmentName: "<%= h(d[2]) %>"
-        }<%= (i < departmentOptions.size() - 1) ? "," : "" %>
+        }<%= (idx < departmentOptions.size() - 1) ? "," : "" %>
     <%   }
        } %>
     ];

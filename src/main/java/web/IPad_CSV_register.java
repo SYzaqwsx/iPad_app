@@ -5,10 +5,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -21,6 +24,7 @@ import jakarta.servlet.http.Part;
 
 import dao.RegisterDao;
 import dto.Register_dto;
+
 
 @WebServlet("/IPad_CSV_register")
 @MultipartConfig(
@@ -63,6 +67,17 @@ public class IPad_CSV_register extends HttpServlet {
         String submittedName = filePart.getSubmittedFileName();
         req.setAttribute("csvUploadedFileName", submittedName);
 
+if (submittedName == null ||
+    !submittedName.toLowerCase().endsWith(".csv")) {
+
+    req.setAttribute("csvError",
+            "CSVファイル(.csv)を選択してください。");
+
+    req.getRequestDispatcher(JSP_PATH).forward(req, resp);
+    return;
+}
+
+
         HttpSession session = req.getSession(false);
         String loginUserId = null;
         if (session != null) {
@@ -85,10 +100,13 @@ public class IPad_CSV_register extends HttpServlet {
         int successCount = 0;    // 登録成功件数
         int skipCount = 0;       // スキップ件数
         List<String> errorList = new ArrayList<>();
+        Set<String> serialNumberSet = new HashSet<>();
 
-        // UTF-8前提。Excel保存CSVで文字化けするなら "MS932" に変更
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(filePart.getInputStream(), StandardCharsets.UTF_8))) {
+
+     // Excelで保存したCSVは日本語環境ではMS932になることが多いため、MS932で読み込む
+     try (BufferedReader br = new BufferedReader(
+             new InputStreamReader(filePart.getInputStream(), Charset.forName("MS932")))) {
+
 
             String line;
             boolean isFirstLine = true;
@@ -166,29 +184,45 @@ public class IPad_CSV_register extends HttpServlet {
                 	}
                 }
                 
-                // 契約日 <= 契約満了日
-                if (contractDate != null && contractPeriod != null && contractPeriod.before(contractDate)) {
-                	rowErrors.add("契約満了日は契約日以降を入力してください。");
-                }
 
-                // 単価
-                if (!isBlank(tankaStr)) {
-                	try {
-                		tanka = new BigDecimal(tankaStr.replace(",", ""));
-                		if (tanka.compareTo(BigDecimal.ZERO) < 0) {
-                			rowErrors.add("単価は0以上を入力してください。");
-                		}
-                	} catch (NumberFormatException e) {
-                		rowErrors.add("単価は数値で入力してください。");
-                	}
-                }
+             // 端末電話番号：入力がある場合は数字のみ
+             if (!isBlank(tel) && !tel.matches("^[0-9]+$")) {
+                 rowErrors.add("端末電話番号は数字のみで入力してください。");
+             }
 
-                // 資産番号重複チェック（資産番号がある場合だけ）
-                if (!isBlank(assetNumber)) {
-                	if (dao.existsByAssetNumber(assetNumber)) {
-                		rowErrors.add("資産番号[" + assetNumber + "]は既に登録されています。");
-                	}
-                }
+             // 契約満了日は契約日より後のみOK
+             // beforeだけだと同日が通るため、afterで判定
+             if (contractDate != null && contractPeriod != null && !contractPeriod.after(contractDate)) {
+                 rowErrors.add("契約満了日は契約日より後の日付を入力してください。");
+             }
+
+             // 単価：整数のみOK
+             if (!isBlank(tankaStr)) {
+                 String normalizedTanka = tankaStr.replace(",", "");
+
+                 if (!normalizedTanka.matches("^[0-9]+$")) {
+                     rowErrors.add("単価は整数で入力してください。");
+                 } else {
+                     tanka = new BigDecimal(normalizedTanka);
+                 }
+             }
+
+             // CSVファイル内のシリアル番号重複チェック
+             if (!isBlank(serialNumber)) {
+                 if (serialNumberSet.contains(serialNumber)) {
+                     rowErrors.add("CSV内でシリアル番号[" + serialNumber + "]が重複しています。");
+                 } else {
+                     serialNumberSet.add(serialNumber);
+                 }
+             }
+
+             // DB上のシリアル番号重複チェック
+             if (!isBlank(serialNumber)) {
+                 if (dao.existsBySerialNumber(serialNumber)) {
+                     rowErrors.add("シリアル番号[" + serialNumber + "]は既に登録されています。");
+                 }
+             }
+
 
                 if (!rowErrors.isEmpty()) {
                 	errorList.add(dataLines + "行目：" + String.join(" / ", rowErrors));

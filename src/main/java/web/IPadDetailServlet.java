@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -53,7 +55,8 @@ public class IPadDetailServlet extends HttpServlet {
         detail.setDepartmentOptions(dao.getDepartmentList());
         detail.setEmployeeOptions(dao.getLatestEmployeeList());
 
-        List<Detail_dto> ownerHistory = dao.findOwnerHistoryBySerialNumber(detail.getSerialNumber());
+        List<Detail_dto> ownerHistory =
+                dao.findOwnerHistoryBySerialNumber(detail.getSerialNumber());
 
         req.setAttribute("detail", detail);
         req.setAttribute("ownerHistory", ownerHistory);
@@ -85,6 +88,7 @@ public class IPadDetailServlet extends HttpServlet {
 
         HttpSession session = req.getSession(false);
         String loginUserId = null;
+
         if (session != null) {
             Object userIdObj = session.getAttribute("authUserId");
             if (userIdObj != null) {
@@ -104,146 +108,520 @@ public class IPadDetailServlet extends HttpServlet {
         try {
             if ("updateTerminal".equals(action)) {
                 Detail_dto dto = new Detail_dto();
+
                 dto.setId(id);
-                dto.setAssetNumber(trim(req.getParameter("assetNumber")));
-                dto.setSerialNumber(trim(req.getParameter("serialNumber")));
+
+                // 画面上 readonly の項目は更新対象外
+                // assetNumber / serialNumber / udid / macAddress はセットしない
+
                 dto.setInnoHin(trim(req.getParameter("innoHin")));
                 dto.setTel(trim(req.getParameter("tel")));
                 dto.setContractDate(parseDate(req.getParameter("contractDate")));
                 dto.setContractPeriod(parseDate(req.getParameter("contractPeriod")));
+                dto.setTerminationDate(parseDate(req.getParameter("terminationDate")));
                 dto.setRentalCompany(trim(req.getParameter("rentalCompany")));
-                dto.setUdid(trim(req.getParameter("udid")));
-                dto.setMacAddress(trim(req.getParameter("macAddress")));
 
                 String tankaStr = trim(req.getParameter("tanka"));
                 if (tankaStr != null && !tankaStr.isEmpty()) {
                     dto.setTanka(Integer.parseInt(tankaStr.replace(",", "")));
+                } else {
+                    dto.setTanka(null);
                 }
 
-                dao.updateTerminal(dto, loginUserId);
-                req.setAttribute("message", "端末情報を更新しました。");
+                String serialNumber = trim(req.getParameter("serialNumber"));
+
+                System.out.println(
+                    "[SQL][DetailDao.updateTerminal] "
+                    + "id=" + id
+                    + ", serialNumber=" + serialNumber
+                    + ", loginUserId=" + loginUserId
+                );
+
+                System.out.println(
+                    "[SQL][DetailDao.updateTerminal] params: "
+                    + "innoHin=" + dto.getInnoHin()
+                    + ", tel=" + dto.getTel()
+                    + ", contractDate=" + dto.getContractDate()
+                    + ", contractPeriod=" + dto.getContractPeriod()
+                    + ", terminationDate=" + dto.getTerminationDate()
+                    + ", rentalCompany=" + dto.getRentalCompany()
+                    + ", tanka=" + dto.getTanka()
+                );
+
+                long start = System.currentTimeMillis();
+
+                int updateCount = dao.updateTerminal(dto, loginUserId);
+
+                long end = System.currentTimeMillis();
+
+                System.out.println(
+                    "[SQL][DetailDao.updateTerminal] updateCount="
+                    + updateCount
+                    + " (update took "
+                    + (end - start)
+                    + " ms)"
+                );
+
+                if (updateCount > 0) {
+                    req.setAttribute("message", "端末情報を更新しました。");
+                } else {
+                    errors.add("更新対象の端末情報が見つかりませんでした。");
+                }
+
                 tab = "terminal";
-            }
 
-            if ("deleteTerminal".equals(action)) {
-                dao.deleteTerminal(id, loginUserId);
-                resp.sendRedirect(req.getContextPath() + "/TerminalServlet");
-                return;
-            }
+            } else if ("deleteTerminal".equals(action)) {
 
-            if ("addOwner".equals(action)) {
-                Detail_dto terminal = dao.findTerminalById(id);
+                String serialNumber = trim(req.getParameter("serialNumber"));
 
-                Detail_dto dto = new Detail_dto();
-                dto.setSerialNumber(terminal.getSerialNumber());
-                dto.setCompanyId(trim(req.getParameter("companyId")));
-                dto.setDepartmentId(trim(req.getParameter("departmentId")));
-                dto.setEmployeeId(trim(req.getParameter("employeeId")));
-                dto.setDistributionDate(parseDate(req.getParameter("distributionDate")));
-                dto.setLongRangeUser(trim(req.getParameter("longRangeUser")));
-                dto.setReturnDate(parseDate(req.getParameter("returnDate")));
+                System.out.println(
+                    "[SQL][DetailDao.deleteTerminalBySerialNumber] "
+                    + "serialNumber=" + serialNumber
+                    + ", loginUserId=" + loginUserId
+                );
 
-                if (dto.getDistributionDate() == null) {
-                    errors.add("配付日は必須です。");
-                }
+                if (serialNumber == null || serialNumber.isEmpty()) {
 
-                if (dto.getEmployeeId() == null || dto.getEmployeeId().isEmpty()) {
-                    errors.add("使用者は必須です。");
-                }
+                    errors.add("シリアル番号が取得できませんでした。");
 
-                String[] emp = null;
-                if (errors.isEmpty()) {
-                    emp = dao.findLatestEmployeeById(dto.getEmployeeId());
-                    if (emp == null) {
-                        errors.add("使用者情報が取得できませんでした。");
+                    System.out.println(
+                        "[SQL][DetailDao.deleteTerminalBySerialNumber] serialNumber is empty"
+                    );
+
+                    tab = "terminal";
+
+                } else {
+
+                    long start = System.currentTimeMillis();
+
+                    int count = dao.deleteTerminalBySerialNumber(serialNumber, loginUserId);
+
+                    long end = System.currentTimeMillis();
+
+                    System.out.println(
+                        "[SQL][DetailDao.deleteTerminalBySerialNumber] updateCount="
+                        + count
+                        + " (update took "
+                        + (end - start)
+                        + " ms)"
+                    );
+
+                    if (count > 0) {
+
+                        System.out.println(
+                            "[AccessLog] deleteTerminal success. serialNumber="
+                            + serialNumber
+                        );
+
+                        resp.sendRedirect(req.getContextPath() + "/TerminalServlet");
+                        return;
+
                     } else {
-                        // emp[0] = company_id
-                        // emp[1] = department_id
-                        // emp[2] = employee_id
-                        // emp[3] = employee_name
-                        dto.setOwnerNum(emp[2]);
-                        dto.setOwnerName(emp[3]);
 
-                        // 会社・部署を employee_management の最新値で上書きしたい場合は以下を有効化
-                        // dto.setCompanyId(emp[0]);
-                        // dto.setDepartmentId(emp[1]);
+                        errors.add("削除対象の端末情報が見つかりませんでした。");
+
+                        System.out.println(
+                            "[AccessLog] deleteTerminal target not found. serialNumber="
+                            + serialNumber
+                        );
+
+                        tab = "terminal";
                     }
                 }
 
-                if (!errors.isEmpty()) {
-                    req.setAttribute("errors", errors);
-                } else {
-                    dao.insertOwner(dto, loginUserId);
-                    req.setAttribute("message", "利用者情報を追加しました。");
-                }
+            } else if ("addOwner".equals(action)) {
 
-                tab = "ownerAdd";
-            }
+                long addOwnerStart = System.currentTimeMillis();
 
-            if ("registerFault".equals(action)) {
+                System.out.println(
+                    "[SQL][IPadDetailServlet.addOwner] start "
+                    + "id=" + id
+                    + ", loginUserId=" + loginUserId
+                    + ", companyId=" + trim(req.getParameter("companyId"))
+                    + ", departmentId=" + trim(req.getParameter("departmentId"))
+                    + ", employeeId=" + trim(req.getParameter("employeeId"))
+                    + ", distributionDate=" + trim(req.getParameter("distributionDate"))
+                    + ", longRangeUser=" + trim(req.getParameter("longRangeUser"))
+                    + ", jisysInventory=" + trim(req.getParameter("jisysInventory"))
+                    + ", jisysInventoryDate=" + trim(req.getParameter("jisysInventoryDate"))
+                );
+
+
                 Detail_dto terminal = dao.findTerminalById(id);
 
                 if (terminal == null) {
                     errors.add("端末情報が取得できませんでした。");
+                    tab = "ownerAdd";
+                    
+
+System.out.println(
+    "[SQL][IPadDetailServlet.addOwner] end "
+    + "(process took "
+    + (System.currentTimeMillis() - addOwnerStart)
+    + " ms)"
+);
+
                 } else {
-                    String[] faultTargets = req.getParameterValues("faultTarget");
+                    String jisysInventoryDate = trim(req.getParameter("jisysInventoryDate"));
 
-                    if (faultTargets == null || faultTargets.length == 0) {
-                        errors.add("故障対象が選択されていません。");
+                    if (jisysInventoryDate != null && !jisysInventoryDate.isEmpty()) {
+                        String serialNumber = terminal.getSerialNumber();
+
+                        if (serialNumber == null || serialNumber.isEmpty()) {
+                            errors.add("シリアル番号が取得できませんでした。");
+                        }
+
+                        Date jisysInventoryDistributionDate = parseDate(jisysInventoryDate);
+
+                        if (jisysInventoryDistributionDate == null) {
+                            errors.add("情シス在庫にチェックがありますが日付が指定されていません");
+                        }
+
+                        if (errors.isEmpty()) {
+                            System.out.println(
+                                "[SQL][DetailDao.registerJisysInventoryOwner] "
+                                + "serialNumber=" + serialNumber
+                                + ", distributionDate=" + jisysInventoryDistributionDate
+                                + ", loginUserId=" + loginUserId
+                            );
+
+                            long start = System.currentTimeMillis();
+
+                            int count = dao.registerJisysInventoryOwner(
+                                serialNumber,
+                                jisysInventoryDistributionDate,
+                                loginUserId
+                            );
+
+                            long end = System.currentTimeMillis();
+
+                            System.out.println(
+                                "[SQL][DetailDao.registerJisysInventoryOwner] resultCount="
+                                + count
+                                + " (process took "
+                                + (end - start)
+                                + " ms)"
+                            );
+
+                            if (count > 0) {
+                                req.setAttribute("message", "情シス在庫として登録しました。");
+                            } else {
+                                errors.add("情シス在庫への更新対象が見つかりませんでした。");
+                            }
+                        }
+
+                        tab = "ownerAdd";
+
                     } else {
-                        int insertCount = 0;
+                        Detail_dto dto = new Detail_dto();
 
-                        for (String target : faultTargets) {
-                            if (target == null || target.isEmpty()) {
-                                continue;
-                            }
+                        dto.setSerialNumber(terminal.getSerialNumber());
+                        dto.setCompanyId(trim(req.getParameter("companyId")));
+                        dto.setDepartmentId(trim(req.getParameter("departmentId")));
+                        dto.setEmployeeId(trim(req.getParameter("employeeId")));
+                        dto.setDistributionDate(parseDate(req.getParameter("distributionDate")));
+                        dto.setLongRangeUser(trim(req.getParameter("longRangeUser")));
 
-                            String[] parts = target.split("\\|", -1);
-                            if (parts.length < 2) {
-                                continue;
-                            }
+                        // 返却日は画面から削除したため常に null
+                        dto.setReturnDate(null);
 
-                            String employeeId = trim(parts[0]);
-                            Date distributionDate = parseDate(parts[1]);
-
-                            if (employeeId == null || employeeId.isEmpty() || distributionDate == null) {
-                                continue;
-                            }
-
-                            // 返却済み行は登録不可
-                            if (dao.isReturnedOwner(terminal.getSerialNumber(), employeeId, distributionDate)) {
-                                continue;
-                            }
-
-                            // 既登録ならスキップ
-                            if (dao.existsFault(employeeId, terminal.getSerialNumber(), distributionDate)) {
-                                continue;
-                            }
-
-                            dao.insertFaultManagement(terminal, employeeId, distributionDate, loginUserId);
-                            insertCount++;
+                        if (dto.getDistributionDate() == null) {
+                            errors.add("配付日は必須です。");
                         }
 
-                        if (insertCount > 0) {
-                            req.setAttribute("message", insertCount + "件の故障情報を登録しました。");
+                        if (dto.getEmployeeId() == null || dto.getEmployeeId().isEmpty()) {
+                            errors.add("使用者は必須です。");
+                        }
+
+                        String[] emp = null;
+
+                        if (errors.isEmpty()) {
+                            emp = dao.findLatestEmployeeById(dto.getEmployeeId());
+
+                            if (emp == null) {
+                                errors.add("使用者情報が取得できませんでした。");
+                            } else {
+                                dto.setOwnerNum(emp[2]);
+                                dto.setOwnerName(emp[3]);
+                            }
+                        }
+
+                        if (!errors.isEmpty()) {
+                            req.setAttribute("errors", errors);
                         } else {
-                            errors.add("登録対象がありませんでした。");
+                            dao.insertOwner(dto, loginUserId);
+                            req.setAttribute("message", "利用者情報を追加しました。");
                         }
+
+                        tab = "ownerAdd";
                     }
                 }
 
-                tab = "ownerHistory";
+
+
+
+} else if ("registerFault".equals(action)) {
+    Detail_dto terminal = dao.findTerminalById(id);
+
+    if (terminal == null) {
+        errors.add("端末情報が取得できませんでした。");
+    } else {
+        String serialNumber = terminal.getSerialNumber();
+
+        /*
+         * 1. 画面上の返却日入力値を保持
+         * key = ownerNum|distributionDate
+         */
+        String[] returnTargets = req.getParameterValues("returnTarget");
+        String[] returnDates = req.getParameterValues("returnDate");
+        String[] originalReturnDates = req.getParameterValues("originalReturnDate");
+
+        Map<String, Date> returnDateMap = new HashMap<>();
+        Map<String, String> originalReturnDateMap = new HashMap<>();
+
+        if (returnTargets != null && returnDates != null) {
+            int len = Math.min(returnTargets.length, returnDates.length);
+
+            for (int i = 0; i < len; i++) {
+                String target = trim(returnTargets[i]);
+                String returnDateStr = trim(returnDates[i]);
+
+                if (target == null || target.isEmpty()) {
+                    continue;
+                }
+
+                if (returnDateStr != null && !returnDateStr.isEmpty()) {
+                    returnDateMap.put(target, parseDate(returnDateStr));
+                }
+
+                if (originalReturnDates != null && i < originalReturnDates.length) {
+                    originalReturnDateMap.put(target, trim(originalReturnDates[i]));
+                } else {
+                    originalReturnDateMap.put(target, "");
+                }
+            }
+        }
+
+        /*
+         * 2. 故障チェック登録
+         * 返却日も同時に入っている場合は、
+         * owner_management.return_date 更新前に fault_management へ insert する
+         */
+        String[] faultTargets = req.getParameterValues("faultTarget");
+
+        int faultInsertCount = 0;
+        int faultReturnUpdateCount = 0;
+
+        if (faultTargets != null && faultTargets.length > 0) {
+            for (String target : faultTargets) {
+                if (target == null || target.isEmpty()) {
+                    continue;
+                }
+
+                String[] parts = target.split("\\|", -1);
+
+                if (parts.length < 2) {
+                    continue;
+                }
+
+                String employeeId = trim(parts[0]);
+                Date distributionDate = parseDate(parts[1]);
+
+                if (employeeId == null || employeeId.isEmpty() || distributionDate == null) {
+                    continue;
+                }
+
+                Date inputReturnDate = returnDateMap.get(target);
+                boolean hasReturnDateOnScreen = inputReturnDate != null;
+
+                /*
+                 * 返却日が同時入力されている場合は、
+                 * このあと返却済みになる前提なので isReturnedOwner の skip 判定はしない。
+                 * 返却日が画面で入力されていない通常の故障登録では、従来通り返却済みチェックを行う。
+                 */
+                if (!hasReturnDateOnScreen) {
+                    if (dao.isReturnedOwner(serialNumber, employeeId, distributionDate)) {
+                        continue;
+                    }
+                }
+
+                if (dao.existsFault(employeeId, serialNumber, distributionDate)) {
+                    continue;
+                }
+
+                System.out.println(
+                    "[SQL][DetailDao.insertFaultManagement] "
+                    + "serialNumber=" + serialNumber
+                    + ", employeeId=" + employeeId
+                    + ", distributionDate=" + distributionDate
+                    + ", hasReturnDateOnScreen=" + hasReturnDateOnScreen
+                    + ", loginUserId=" + loginUserId
+                );
+
+                int inserted = dao.insertFaultManagement(
+                    terminal,
+                    employeeId,
+                    distributionDate,
+                    loginUserId
+                );
+
+                if (inserted > 0) {
+                    faultInsertCount++;
+
+                    /*
+                     * 返却日と故障チェックが同時に入っている場合、
+                     * terminal_management.is_fault_return を 1 に更新する
+                     */
+                    if (hasReturnDateOnScreen) {
+                        int faultReturnUpdated =
+                            dao.updateTerminalFaultReturn(serialNumber, loginUserId);
+
+                        if (faultReturnUpdated > 0) {
+                            faultReturnUpdateCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+         * 3. 返却日更新
+         */
+        int returnUpdateCount = 0;
+
+        if (returnTargets != null && returnDates != null) {
+            int len = Math.min(returnTargets.length, returnDates.length);
+
+            for (int i = 0; i < len; i++) {
+                String target = trim(returnTargets[i]);
+                String returnDateStr = trim(returnDates[i]);
+
+                String originalReturnDateStr = "";
+                if (originalReturnDates != null && i < originalReturnDates.length) {
+                    originalReturnDateStr = trim(originalReturnDates[i]);
+                }
+
+                // 返却日が空の場合は更新しない
+                if (returnDateStr == null || returnDateStr.isEmpty()) {
+                    continue;
+                }
+
+                // 変更がない場合は更新しない
+                if (returnDateStr.equals(originalReturnDateStr)) {
+                    continue;
+                }
+
+                if (target == null || target.isEmpty()) {
+                    errors.add("返却日の更新対象が取得できませんでした。");
+                    continue;
+                }
+
+                String[] parts = target.split("\\|", -1);
+
+                if (parts.length < 2) {
+                    errors.add("返却日の更新対象が不正です。");
+                    continue;
+                }
+
+                String ownerNum = trim(parts[0]);
+                Date distributionDate = parseDate(parts[1]);
+                Date returnDate = parseDate(returnDateStr);
+
+                if (ownerNum == null || ownerNum.isEmpty()) {
+                    errors.add("返却日の更新対象ユーザーが取得できませんでした。");
+                    continue;
+                }
+
+                if (distributionDate == null) {
+                    errors.add("返却日の更新対象の配付日が取得できませんでした。");
+                    continue;
+                }
+
+                if (returnDate == null) {
+                    errors.add("返却日の日付形式が不正です。");
+                    continue;
+                }
+
+                System.out.println(
+                    "[SQL][DetailDao.updateOwnerReturnDate] "
+                    + "serialNumber=" + serialNumber
+                    + ", ownerNum=" + ownerNum
+                    + ", distributionDate=" + distributionDate
+                    + ", returnDate=" + returnDate
+                    + ", loginUserId=" + loginUserId
+                );
+
+                int count = dao.updateOwnerReturnDate(
+                    serialNumber,
+                    ownerNum,
+                    distributionDate,
+                    returnDate,
+                    loginUserId
+                );
+
+                if (count > 0) {
+                    returnUpdateCount++;
+                } else {
+                    errors.add("返却日の更新対象が見つかりませんでした。");
+                }
+            }
+        }
+
+        if (errors.isEmpty()) {
+            List<String> messages = new ArrayList<>();
+
+            if (returnUpdateCount > 0) {
+                messages.add(returnUpdateCount + "件の返却日を更新しました。");
             }
 
+            if (faultInsertCount > 0) {
+                messages.add(faultInsertCount + "件の故障情報を登録しました。");
+            }
+
+            if (faultReturnUpdateCount > 0) {
+                messages.add("故障返却フラグを更新しました。");
+            }
+
+            if (!messages.isEmpty()) {
+                req.setAttribute("message", String.join(" ", messages));
+            } else {
+                errors.add("登録対象がありませんでした。");
+            }
+        }
+    }
+
+    tab = "ownerHistory";
+
+
+
+            } else {
+                errors.add("不正な操作が行われました。");
+                tab = "terminal";
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
+
+            System.out.println(
+                "[IPadDetailServlet] ERROR action="
+                + action
+                + ", id="
+                + id
+                + ", message="
+                + e.getMessage()
+            );
+
             errors.add("処理中にエラーが発生しました。");
+            req.setAttribute("errors", errors);
+        }
+
+        if (!errors.isEmpty()) {
             req.setAttribute("errors", errors);
         }
 
         req.setAttribute("tab", tab);
         req.setAttribute("id", id);
+
         doGet(req, resp);
     }
 
@@ -255,6 +633,7 @@ public class IPadDetailServlet extends HttpServlet {
         if (s == null || s.trim().isEmpty()) {
             return null;
         }
+
         return Date.valueOf(s);
     }
 }
