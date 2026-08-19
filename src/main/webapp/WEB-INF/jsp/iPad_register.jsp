@@ -412,16 +412,19 @@ body{
 
                 <% if (csvMessage != null) { %>
                     <div class="note success" style="margin-top:20px;">
-                        <p><%= h(csvMessage) %></p>
+                         <div style="white-space: pre-line;">
+                              <%= h(csvMessage) %>
+                         </div>
                     </div>
                 <% } %>
 
-                <% if (csvError != null) { %>
-                    <div class="note error" style="margin-top:20px;">
-                        <p><%= h(csvError) %></p>
-                    </div>
-                <% } %>
-            </div>
+<% if (csvError != null) { %>
+    <div class="note error" style="margin-top:20px;">
+        <div style="white-space: pre-line;">
+            <%= h(csvError) %>
+        </div>
+    </div>
+<% } %>
 
             <div class="modal-footer modal-footer-between">
                 <button type="button" class="btn-soft small" id="closeCsvModalBtn">戻る</button>

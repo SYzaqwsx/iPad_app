@@ -261,10 +261,11 @@ if (submittedName == null ||
             }
 
             // 結果メッセージ
-            String resultMessage = "CSV一括登録結果：ファイル=" + submittedName
-                    + "、データ行数=" + dataLines
-                    + "件、登録成功=" + successCount
-                    + "件、スキップ=" + skipCount + "件";
+            String resultMessage =   "CSV一括登録結果\n"
+            	    + "ファイル=" + submittedName + "\n"
+            	    + "データ行数=" + dataLines + "件\n"
+            	    + "登録成功=" + successCount + "件\n"
+            	    + "スキップ=" + skipCount + "件\n";
 
             // 成功1件以上のときだけ success を表示
             if (successCount > 0) {
@@ -277,9 +278,9 @@ if (submittedName == null ||
                 List<String> showErrors = errorList.subList(0, maxShow);
 
                 StringBuilder err = new StringBuilder();
-                err.append(resultMessage).append(" / エラー詳細：");
+                err.append(resultMessage).append("【エラー詳細】\n");
                 for (String s : showErrors) {
-                    err.append(" ").append(s);
+                	err.append(s).append("\n");
                 }
                 if (errorList.size() > maxShow) {
                     err.append(" ... 他 ").append(errorList.size() - maxShow).append(" 件");

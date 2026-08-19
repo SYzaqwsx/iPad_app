@@ -59,6 +59,14 @@ td{
     text-align:center;
     padding:6px;
 }
+.tanka-cell{
+    text-align:right;
+    padding-right:10px;
+}
+.text-left{
+    text-align:left;
+    padding-left:10px;
+}
 
 /* ===== 行背景色 ===== */
 
@@ -358,9 +366,11 @@ function resetForm(){
         <td>
             <fmt:formatDate value="${t.terminationDate}" pattern="yyyy/MM/dd"/>
         </td>
-        <td>${t.tanka}</td>
-        <td>${t.companyName}</td>
-        <td>${t.departmentName}</td>
+        <td class="tanka-cell">
+            <fmt:formatNumber value="${t.tanka}" pattern="#,##0"/>
+        </td>
+        <td class="text-left">${t.companyName}</td>
+        <td class="text-left">${t.departmentName}</td>
         <td>${t.ownerName}</td>
         <td><fmt:formatDate value="${t.distributionDate}" pattern="yyyy/MM/dd"/></td>
         <td><a href="${pageContext.request.contextPath}/IPadDetailServlet?id=${t.id}">＞</a></td>
