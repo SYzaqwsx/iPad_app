@@ -285,77 +285,89 @@ public class DetailDao extends BaseDao {
     }
 
 
-public int insertOwner(Detail_dto dto, String loginUserId) {
-    String sql =
-        "INSERT INTO owner_management (" +
-        " id, " +
-        " serial_number, company_id, department_id, owner_num, owner_name, " +
-        " distribution_date, return_date, longrange_usr, " +
-        " insert_date, insert_user, update_date, update_user" +
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, NOW(), ?)";
+    public int insertOwner(Detail_dto dto, String loginUserId) {
+        String sql =
+            "INSERT INTO owner_management (" +
+            " id, " +
+            " asset_number, " +
+            " serial_number, " +
+            " company_id, " +
+            " department_id, " +
+            " owner_num, " +
+            " owner_name, " +
+            " distribution_date, " +
+            " return_date, " +
+            " longrange_usr, " +
+            " insert_date, " +
+            " insert_user, " +
+            " update_date, " +
+            " update_user" +
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, NOW(), ?)";
 
-    long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
-    try (Connection con = getConnection()) {
+        try (Connection con = getConnection()) {
 
-        long nextId = getNextOwnerId(con);
-
-        System.out.println(
-            "[SQL][DetailDao.insertOwner] " + sql
-        );
-
-        System.out.println(
-            "[SQL][DetailDao.insertOwner] params: "
-            + "id=" + nextId
-            + ", serialNumber=" + dto.getSerialNumber()
-            + ", companyId=" + dto.getCompanyId()
-            + ", departmentId=" + dto.getDepartmentId()
-            + ", ownerNum=" + dto.getOwnerNum()
-            + ", ownerName=" + dto.getOwnerName()
-            + ", distributionDate=" + dto.getDistributionDate()
-            + ", returnDate=" + dto.getReturnDate()
-            + ", longRangeUser=" + dto.getLongRangeUser()
-            + ", insertUser=" + loginUserId
-            + ", updateUser=" + loginUserId
-        );
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setLong(1, nextId);
-            ps.setString(2, dto.getSerialNumber());
-            ps.setString(3, dto.getCompanyId());
-            ps.setString(4, dto.getDepartmentId());
-            ps.setString(5, dto.getOwnerNum());
-            ps.setString(6, dto.getOwnerName());
-            ps.setDate(7, dto.getDistributionDate());
-            ps.setDate(8, dto.getReturnDate());
-            ps.setString(9, dto.getLongRangeUser());
-            ps.setString(10, loginUserId);
-            ps.setString(11, loginUserId);
-
-            int count = ps.executeUpdate();
-
-            long end = System.currentTimeMillis();
+            long nextId = getNextOwnerId(con);
 
             System.out.println(
-                "[SQL][DetailDao.insertOwner] count="
-                + count
-                + " (query took "
-                + (end - start)
-                + " ms)"
+                "[SQL][DetailDao.insertOwner] " + sql
             );
 
-            return count;
+            System.out.println(
+                "[SQL][DetailDao.insertOwner] params: "
+                + "id=" + nextId
+                + ", assetNumber=" + dto.getAssetNumber()
+                + ", serialNumber=" + dto.getSerialNumber()
+                + ", companyId=" + dto.getCompanyId()
+                + ", departmentId=" + dto.getDepartmentId()
+                + ", ownerNum=" + dto.getOwnerNum()
+                + ", ownerName=" + dto.getOwnerName()
+                + ", distributionDate=" + dto.getDistributionDate()
+                + ", returnDate=" + dto.getReturnDate()
+                + ", longRangeUser=" + dto.getLongRangeUser()
+                + ", insertUser=" + loginUserId
+                + ", updateUser=" + loginUserId
+            );
+
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setLong(1, nextId);
+                ps.setString(2, dto.getAssetNumber());
+                ps.setString(3, dto.getSerialNumber());
+                ps.setString(4, dto.getCompanyId());
+                ps.setString(5, dto.getDepartmentId());
+                ps.setString(6, dto.getOwnerNum());
+                ps.setString(7, dto.getOwnerName());
+                ps.setDate(8, dto.getDistributionDate());
+                ps.setDate(9, dto.getReturnDate());
+                ps.setString(10, dto.getLongRangeUser());
+                ps.setString(11, loginUserId);
+                ps.setString(12, loginUserId);
+
+                int count = ps.executeUpdate();
+
+                long end = System.currentTimeMillis();
+
+                System.out.println(
+                    "[SQL][DetailDao.insertOwner] count="
+                    + count
+                    + " (query took "
+                    + (end - start)
+                    + " ms)"
+                );
+
+                return count;
+            }
+
+        } catch (Exception e) {
+            System.out.println(
+                "[SQL][DetailDao.insertOwner] ERROR: "
+                + e.getMessage()
+            );
+
+            throw new RuntimeException(e);
         }
-
-    } catch (Exception e) {
-        System.out.println(
-            "[SQL][DetailDao.insertOwner] ERROR: "
-            + e.getMessage()
-        );
-
-        throw new RuntimeException(e);
     }
-}
 
 
     public int updateTerminal(Detail_dto dto, String loginUserId) {
@@ -957,6 +969,56 @@ public int updateTerminalFaultReturn(String serialNumber, String loginUserId) {
     } catch (Exception e) {
         System.out.println(
             "[SQL][DetailDao.updateTerminalFaultReturn] ERROR: "
+            + e.getMessage()
+        );
+
+        throw new RuntimeException(e);
+    }
+}
+
+public int updateTerminalInventoryOff(String serialNumber, String loginUserId) {
+    String sql =
+        "UPDATE terminal_management SET " +
+        " isd_inventory = '0', " +
+        " update_date = NOW(), " +
+        " update_user = ? " +
+        "WHERE serial_number = ? " +
+        "  AND is_deleted = '0' " +
+        "  AND isd_inventory = '1'";
+
+    System.out.println("[SQL][DetailDao.updateTerminalInventoryOff] " + sql);
+
+    System.out.println(
+        "[SQL][DetailDao.updateTerminalInventoryOff] params: "
+        + "loginUserId=" + loginUserId
+        + ", serialNumber=" + serialNumber
+    );
+
+    long start = System.currentTimeMillis();
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setString(1, loginUserId);
+        ps.setString(2, serialNumber);
+
+        int count = ps.executeUpdate();
+
+        long end = System.currentTimeMillis();
+
+        System.out.println(
+            "[SQL][DetailDao.updateTerminalInventoryOff] count="
+            + count
+            + " (query took "
+            + (end - start)
+            + " ms)"
+        );
+
+        return count;
+
+    } catch (Exception e) {
+        System.out.println(
+            "[SQL][DetailDao.updateTerminalInventoryOff] ERROR: "
             + e.getMessage()
         );
 

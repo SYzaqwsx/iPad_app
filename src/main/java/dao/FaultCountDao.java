@@ -19,6 +19,11 @@ public class FaultCountDao extends BaseDao {
             "SELECT company_id, company_name " +
             "FROM company_management " +
             "ORDER BY company_name";
+        
+        System.out.println(
+        	    "[SQL][FaultCountDao.getCompanyList] "
+        	    + sql
+        	);
 
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -30,6 +35,11 @@ public class FaultCountDao extends BaseDao {
                     rs.getString("company_name")
                 });
             }
+            
+            System.out.println(
+            	    "[SQL][FaultCountDao.getCompanyList] count="
+            	    + list.size()
+            	);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -46,6 +56,11 @@ public class FaultCountDao extends BaseDao {
             "FROM department_management " +
             "ORDER BY department_name";
 
+        System.out.println(
+        	    "[SQL][FaultCountDao.getDepartmentList] "
+        	    + sql
+        	);
+
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -57,6 +72,10 @@ public class FaultCountDao extends BaseDao {
                     rs.getString("department_name")
                 });
             }
+            System.out.println(
+            	    "[SQL][FaultCountDao.getDepartmentList] count="
+            	    + list.size()
+            	);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -122,9 +141,24 @@ public class FaultCountDao extends BaseDao {
 
         Date from = Date.valueOf(year + "-01-01");
         Date to = Date.valueOf((year + 1) + "-01-01");
+        
+        System.out.println(
+        	    "[SQL][FaultCountDao.findFaultCountRows] "
+        	    + sql.toString()
+        	);
 
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+        	System.out.println(
+        	    "[SQL][FaultCountDao.findFaultCountRows] params: "
+        	    + "from=" + from
+        	    + ", to=" + to
+        	    + ", companyId=" + companyId
+        	    + ", departmentId=" + departmentId
+        	);
+
+        	long start = System.currentTimeMillis();
+
+        	try (Connection con = getConnection();
+        	     PreparedStatement ps = con.prepareStatement(sql.toString())) {
 
             int idx = 1;
             ps.setDate(idx++, from);
@@ -149,11 +183,26 @@ public class FaultCountDao extends BaseDao {
                     dto.setFaultCount(rs.getInt("fault_count"));
                     list.add(dto);
                 }
+                long end = System.currentTimeMillis();
+
+                System.out.println(
+                    "[SQL][FaultCountDao.findFaultCountRows] count="
+                    + list.size()
+                    + " (query took "
+                    + (end - start)
+                    + " ms)"
+                );
             }
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        	} catch (Exception e) {
+
+        	    System.out.println(
+        	        "[SQL][FaultCountDao.findFaultCountRows] ERROR: "
+        	        + e.getMessage()
+        	    );
+
+        	    throw new RuntimeException(e);
+        	}
 
         return list;
     }

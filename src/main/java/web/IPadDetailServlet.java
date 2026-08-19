@@ -315,6 +315,7 @@ System.out.println(
                     } else {
                         Detail_dto dto = new Detail_dto();
 
+                        dto.setAssetNumber(terminal.getAssetNumber());
                         dto.setSerialNumber(terminal.getSerialNumber());
                         dto.setCompanyId(trim(req.getParameter("companyId")));
                         dto.setDepartmentId(trim(req.getParameter("departmentId")));
@@ -349,7 +350,20 @@ System.out.println(
                         if (!errors.isEmpty()) {
                             req.setAttribute("errors", errors);
                         } else {
-                            dao.insertOwner(dto, loginUserId);
+                            int insertCount = dao.insertOwner(dto, loginUserId);
+
+                            int inventoryOffCount = dao.updateTerminalInventoryOff(
+                                terminal.getSerialNumber(),
+                                loginUserId
+                            );
+
+                            System.out.println(
+                                "[SQL][IPadDetailServlet.addOwner] result: "
+                                + "insertOwnerCount=" + insertCount
+                                + ", inventoryOffCount=" + inventoryOffCount
+                                + ", serialNumber=" + terminal.getSerialNumber()
+                            );
+
                             req.setAttribute("message", "利用者情報を追加しました。");
                         }
 
@@ -459,29 +473,34 @@ System.out.println(
                 );
 
                 int inserted = dao.insertFaultManagement(
-                    terminal,
-                    employeeId,
-                    distributionDate,
-                    loginUserId
-                );
+                	    terminal,
+                	    employeeId,
+                	    distributionDate,
+                	    loginUserId
+                	);
 
-                if (inserted > 0) {
-                    faultInsertCount++;
+                	if (inserted > 0) {
+                	    faultInsertCount++;
 
-                    /*
-                     * 返却日と故障チェックが同時に入っている場合、
-                     * terminal_management.is_fault_return を 1 に更新する
-                     */
-                    if (hasReturnDateOnScreen) {
-                        int faultReturnUpdated =
-                            dao.updateTerminalFaultReturn(serialNumber, loginUserId);
+                	    /*
+                	     * 故障チェックが入り、fault_management に登録できた場合は、
+                	     * 返却日の有無に関係なく terminal_management.is_fault_return を 1 に更新する
+                	     */
+                	    int faultReturnUpdated = dao.updateTerminalFaultReturn(
+                	        serialNumber,
+                	        loginUserId
+                	    );
 
-                        if (faultReturnUpdated > 0) {
-                            faultReturnUpdateCount++;
-                        }
-                    }
-                }
-            }
+                	    if (faultReturnUpdated > 0) {
+                	        faultReturnUpdateCount++;
+                	    }
+
+                	    System.out.println(
+                	        "[SQL][IPadDetailServlet.registerFault] updateTerminalFaultReturn result: "
+                	        + "count=" + faultReturnUpdated
+                	        + ", serialNumber=" + serialNumber
+                	    );
+                	}
         }
 
         /*
@@ -593,7 +612,7 @@ System.out.println(
     tab = "ownerHistory";
 
 
-
+    }
             } else {
                 errors.add("不正な操作が行われました。");
                 tab = "terminal";

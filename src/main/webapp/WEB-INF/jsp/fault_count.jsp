@@ -114,7 +114,6 @@
 
         .hint {
             width: 100%;
-            max-width: 510px;
             margin: 0 auto 4px;
             text-align: right;
             font-size: 14px;
@@ -123,8 +122,6 @@
 
         .list-box {
             width: 100%;
-            max-width: 510px;
-            height: 255px;
             margin: 0 auto;
             overflow-y: auto;
             overflow-x: hidden;
@@ -213,7 +210,6 @@
 
         .excel-box {
             width: 100%;
-            max-width: 510px;
             margin: 10px auto 0;
             display: flex;
             justify-content: flex-end;

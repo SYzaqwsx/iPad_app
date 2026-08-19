@@ -947,7 +947,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="doc-modal-box" role="dialog" aria-modal="true" aria-labelledby="docModalTitle">
             <div class="doc-modal-header" id="docModalTitle">書類</div>
 
-             <form method="post" action="<%= request.getContextPath() %>/OwnerDocumentUploadServlet" enctype="multipart/form-data">
+             <form method="post" action="<%= request.getContextPath() %>/OwnerDocumentUploadServlet" id="docUploadForm" enctype="multipart/form-data">
                 <input type="hidden" name="id" id="docModalId">
                 <input type="hidden" name="tab" value="ownerHistory">
                 <input type="hidden" name="serialNumber" id="docSerialNumber">
@@ -959,7 +959,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="doc-status" id="receiptStatus"></div>
                         <div class="doc-actions">
                             <label class="btn-soft" for="receiptFile" id="receiptLabel">ファイルの選択</label>
-                            <input id="receiptFile" name="receiptFile" type="file" accept=".pdf" style="display:none;">
+                            <input id="receiptFile" name="receiptFile" type="file" accept="application/pdf,.pdf" style="display:none;">
                             <button type="button" class="btn-soft" id="receiptViewBtn" style="display:none;">表示</button>
                             <button type="button" class="btn-soft" id="receiptDeleteBtn" style="display:none;">削除</button>
                         </div>
@@ -971,7 +971,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="doc-status" id="returnStatus"></div>
                         <div class="doc-actions">
                             <label class="btn-soft" for="returnFile" id="returnLabel">ファイルの選択</label>
-                            <input id="returnFile" name="returnFile" type="file" accept=".pdf" style="display:none;">
+                            <input id="returnFile" name="returnFile" type="file" accept="application/pdf,.pdf" style="display:none;">
                             <button type="button" class="btn-soft" id="returnViewBtn" style="display:none;">表示</button>
                             <button type="button" class="btn-soft" id="returnDeleteBtn" style="display:none;">削除</button>
                         </div>
@@ -1115,16 +1115,71 @@ document.addEventListener("DOMContentLoaded", function() {
         const receiptFile = document.getElementById("receiptFile");
         if (receiptFile) {
             receiptFile.addEventListener("change", function(){
-                const f = this.files && this.files[0];
-                document.getElementById("receiptFileName").textContent = f ? f.name : "";
+                validatePdfFile(this, "receiptFileName");
             });
         }
 
         const returnFile = document.getElementById("returnFile");
         if (returnFile) {
             returnFile.addEventListener("change", function(){
-                const f = this.files && this.files[0];
-                document.getElementById("returnFileName").textContent = f ? f.name : "";
+                validatePdfFile(this, "returnFileName");
+            });
+        }
+
+        function isPdfFile(file){
+            if (!file) {
+                return true;
+            }
+
+            const fileName = file.name || "";
+            const fileType = file.type || "";
+
+            return fileName.toLowerCase().endsWith(".pdf")
+                && (fileType === "" || fileType === "application/pdf");
+        }
+
+        function validatePdfFile(input, fileNameSpanId){
+            const file = input.files && input.files[0];
+
+            if (!file) {
+                document.getElementById(fileNameSpanId).textContent = "";
+                return true;
+            }
+
+            if (!isPdfFile(file)) {
+                alert("PDFファイルのみ登録できます。");
+
+                input.value = "";
+                document.getElementById(fileNameSpanId).textContent = "";
+
+                return false;
+            }
+
+            document.getElementById(fileNameSpanId).textContent = file.name;
+            return true;
+        }
+
+        const docUploadForm = document.getElementById("docUploadForm");
+        if (docUploadForm) {
+            docUploadForm.addEventListener("submit", function(e){
+                const receiptInput = document.getElementById("receiptFile");
+                const returnInput = document.getElementById("returnFile");
+
+                if (receiptInput && receiptInput.files && receiptInput.files[0]) {
+                    if (!isPdfFile(receiptInput.files[0])) {
+                        alert("受領書はPDFファイルのみ登録できます。");
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+
+                if (returnInput && returnInput.files && returnInput.files[0]) {
+                    if (!isPdfFile(returnInput.files[0])) {
+                        alert("返却書はPDFファイルのみ登録できます。");
+                        e.preventDefault();
+                        return false;
+                    }
+                }
             });
         }
 
