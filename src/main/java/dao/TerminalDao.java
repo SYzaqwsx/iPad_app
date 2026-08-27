@@ -17,13 +17,17 @@ public class TerminalDao extends BaseDao {
     // =============================
     // 一覧取得...検索条件で表示するデータを見つける
     // =============================
-    public List<Terminal_dto> findAll(int offset, int limit,
-            String company,
-            String[] innoArr,
-            String[] ownerArr,
-            boolean terminated,
-            boolean inventory,
-            boolean soon) {
+	public List<Terminal_dto> findAll(
+	        int offset,
+	        int limit,
+	        String company,
+	        String[] innoArr,
+	        String[] ownerArr,
+	        boolean terminated,
+	        boolean inventory,
+	        boolean soon,
+	        boolean ibsOnly,
+	        boolean adminView) {
 
         List<Terminal_dto> list = new ArrayList<>();
 
@@ -49,6 +53,20 @@ public class TerminalDao extends BaseDao {
         sql.append("LEFT JOIN company_management cm ON o.company_id = cm.company_id ");
         sql.append("LEFT JOIN department_management dm ON o.department_id = dm.department_id ");
         sql.append("WHERE t.is_deleted = '0' ");
+        
+        // IBS権限は company_id=7000 のみ
+        // それ以外は company_id=7000 を除外
+        if (ibsOnly) {
+
+            sql.append(
+                    "AND o.company_id = ? ");
+
+        } else if (!adminView) {
+
+            sql.append(
+                    "AND (o.company_id IS NULL "
+                    + "OR o.company_id <> ?) ");
+        }
 
         if (!terminated) {
             sql.append("AND t.termination_date IS NULL ");
@@ -87,8 +105,14 @@ public class TerminalDao extends BaseDao {
             // ✅ SQLログ
             System.out.println("[SQL][TerminalDao.findAll]");
             System.out.println(sql.toString());
+            System.out.println(
+            		"[TerminalDao.findAll] ibsOnly="
+            		+ ibsOnly);
 
             int idx = 1;
+            if (!adminView) {
+                ps.setInt(idx++, 7000);
+            }
 
             if (company != null && !company.isEmpty()) {
                 ps.setString(idx++, company);
@@ -148,12 +172,15 @@ public class TerminalDao extends BaseDao {
     // =============================
     // 件数取得...ページ数を決める
     // =============================
-    public int countAll(String company,
-            String[] innoArr,
-            String[] ownerArr,
-            boolean terminated,
-            boolean inventory,
-            boolean soon) 
+	public int countAll(
+	        String company,
+	        String[] innoArr,
+	        String[] ownerArr,
+	        boolean terminated,
+	        boolean inventory,
+	        boolean soon,
+	        boolean ibsOnly,
+	        boolean adminView)
     {
         int count = 0;
         StringBuilder sql = new StringBuilder();
@@ -170,6 +197,17 @@ public class TerminalDao extends BaseDao {
         sql.append(") o ON t.serial_number = o.serial_number ");
         sql.append("LEFT JOIN company_management cm ON o.company_id = cm.company_id ");
         sql.append("WHERE t.is_deleted = '0' ");
+        if (ibsOnly) {
+
+            sql.append(
+                    "AND o.company_id = ? ");
+
+        } else if (!adminView) {
+
+            sql.append(
+                    "AND (o.company_id IS NULL "
+                    + "OR o.company_id <> ?) ");
+        }
         // ✅ 解約
         if (!terminated) {
             sql.append("AND t.termination_date IS NULL ");
@@ -208,6 +246,9 @@ public class TerminalDao extends BaseDao {
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql.toString())) {
             int idx = 1;
+            if (!adminView) {
+                ps.setInt(idx++, 7000);
+            }
             if (company != null && !company.isEmpty()) {
                 ps.setString(idx++, company);
             }

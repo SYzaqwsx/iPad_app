@@ -53,9 +53,7 @@
 
     <link rel="stylesheet" href="<%= request.getContextPath() %>/static/css/base.css?v=20260218">
 
-    <style>
-    
-    
+<style>
 html, body{
     height:100%;
     margin:0;
@@ -223,7 +221,7 @@ body{
                 width:100%;
             }
         }
-    </style>
+</style>
 </head>
 <body>
     <header class="topbar">

@@ -25,6 +25,12 @@
     String message = (String) request.getAttribute("message");
     List<String> errors = (List<String>) request.getAttribute("errors");
 %>
+<%
+    Boolean companyFixedObj = (Boolean) request.getAttribute( "companyFixed");
+    Boolean ownerAddReadOnlyObj = (Boolean) request.getAttribute( "ownerAddReadOnly");
+    boolean companyFixed = Boolean.TRUE.equals( companyFixedObj);
+    boolean ownerAddReadOnly = Boolean.TRUE.equals( ownerAddReadOnlyObj);
+%>
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -671,29 +677,69 @@ body.detail-page .note{
                         </div>
 
                         <div class="form-grid">
-    <div class="cell label">会社</div>
-    <div class="cell input span3">
-        <select name="companyId" id="companyId">
-            <option value="">--選択--</option>
-            <% for (String[] c : detail.getCompanyOptions()) { %>
-                <option value="<%= h(c[0]) %>"
-                    <%= c[0].equals(selectedCompanyId) ? "selected" : "" %>>
-                    <%= h(c[1]) %>
-                </option>
-            <% } %>
-        </select>
-    </div>
-
+                        <div class="cell label">会社</div>
+                        <div class="cell input span3 <%= companyFixed || ownerAddReadOnly  ? "readonly-cell" : "" %>">
+                        <% if (companyFixed) { %>
+                        <select
+                         id="companyIdDisplay"
+                         class="readonly-input"
+                         disabled>
+                         <% for (String[] c : detail.getCompanyOptions()) { %>
+                         <% if ("7000".equals(c[0])) { %>
+                         <option value="7000" selected>
+                         <%= h(c[1]) %>
+                         </option>
+                         <% } %>
+                         <% } %>
+                        </select>
+                        <input
+                        type="hidden"
+                        id="companyId"
+                        name="companyId"
+                        value="7000">
+                        <% } else if (ownerAddReadOnly) { %>
+                        <select
+                         id="companyId"
+                         name="companyId"
+                         class="readonly-input"
+                         disabled>
+                         <option value="">--選択--</option>
+                         <% for (String[] c : detail.getCompanyOptions()) { %>
+                         <option
+                         value="<%= h(c[0]) %>"
+                         <%= c[0].equals(selectedCompanyId) ? "selected" : "" %>>
+                         <%= h(c[1]) %>
+                         </option>
+                         <% } %>
+                        </select>
+                        <% } else { %>
+                        <select
+                         id="companyId"
+                         name="companyId">
+                         <option value="">--選択--</option>
+                         <% for (String[] c : detail.getCompanyOptions()) { %>
+                         <option value="<%= h(c[0]) %>" <%= c[0].equals(selectedCompanyId) ? "selected" : "" %>>
+                         <%= h(c[1]) %>
+                         </option>
+                         <% } %>
+                        </select>
+                        <% } %>
+                        </div>
     <div class="cell label">部署</div>
     <div class="cell input span3">
-        <select name="departmentId" id="departmentId">
-            <option value="">--選択--</option>
+        <select
+        name="departmentId"
+        id="departmentId"
+        <%= ownerAddReadOnly ? "disabled class=\"readonly-input\"" : "" %>>
+        <option value="">--選択--</option>
         </select>
     </div>
-
     <div class="cell label">使用者</div>
     <div class="cell input span3">
-        <select name="employeeId" id="employeeId">
+        <select
+        name="employeeId"
+        id="employeeId"
+        <%= ownerAddReadOnly ? "disabled class=\"readonly-input\"" : "" %>>
             <option value="">--選択--</option>
         </select>
     </div>
@@ -704,40 +750,43 @@ body.detail-page .note{
             type="date"
             id="distributionDate"
             name="distributionDate"
-            value="<%= h(selectedDistributionDate) %>">
+            value="<%= h(selectedDistributionDate) %>"
+            <%= ownerAddReadOnly ? "disabled class=\"readonly-input\"": "" %>>
     </div>
-
-    <div class="cell label">LongRangeユーザ名</div>
-    <div class="cell input span3">
-        <input
-            type="text"
-            id="longRangeUser"
-            name="longRangeUser"
-            value="<%= h(selectedLongRangeUser) %>">
-    </div>
+<div class="cell label"> LongRangeユーザ名</div>
+<div class="cell input span3 <%= ownerAddReadOnly ? "readonly-cell" : "" %>">
+    <input
+        type="text"
+        id="longRangeUser"
+        name="longRangeUser"
+        value="<%= h(selectedLongRangeUser) %>"
+        <%= ownerAddReadOnly ? "disabled class=\"readonly-input\"" : "" %>>
+</div>
 </div>
 
 <div class="form-grid stock-grid">
-    <div class="cell label">
-        情シス在庫
-    </div>
-    <div class="cell input span3 stock-input-area">
+    <div class="cell label">情シス在庫</div>
+    <div class="cell input span3 stock-input-area <%= ownerAddReadOnly ? "readonly-cell" : "" %>">
         <input
             type="date"
             id="jisysInventoryDate"
             name="jisysInventoryDate"
             value="<%= h(selectedJisysInventoryDate) %>"
-            class="stock-date">
+            class="stock-date<%= ownerAddReadOnly ? " readonly-input" : "" %>"
+            <%= ownerAddReadOnly ? "disabled" : "" %>>
     </div>
 </div>
-
-                        <div class="actions actions-right">
-                            <button type="submit" class="btn btn-primary">追加</button>
-                        </div>
-                    </div>
-                    
-                    <script>
-document.addEventListener("DOMContentLoaded", function() {
+<div class="actions actions-right">
+    <button
+        type="submit"
+        class="btn btn-primary"
+        <%= ownerAddReadOnly ? "disabled" : "" %>>
+        追加
+    </button>
+    </div>
+</div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
 
     const companyId = document.getElementById("companyId");
     const departmentId = document.getElementById("departmentId");
@@ -745,9 +794,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const distributionDate = document.getElementById("distributionDate");
     const longRangeUser = document.getElementById("longRangeUser");
     const jisysInventoryDate = document.getElementById("jisysInventoryDate");
-
+    const ownerAddReadOnly = <%= ownerAddReadOnly ? "true" : "false" %>;
+    
     const ownerInputs = [
-        companyId,
         departmentId,
         employeeId,
         distributionDate,
@@ -765,19 +814,35 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function updateControlState() {
+    	if (ownerAddReadOnly) {
+        	ownerInputs.forEach(function(el) {
+    	        if (!el) { return; }
+    	        el.disabled = true;
+    	        el.classList.add( "disabled-input");
+    	    });
+    	    if (companyId && companyId.type !== "hidden") {
+    	        companyId.disabled = true;
+    	        companyId.classList.add( "disabled-input");
+    	    }
+    	    if (jisysInventoryDate) {
+    	        jisysInventoryDate.disabled = true;
+    	        jisysInventoryDate.classList.add( "disabled-input");
+    	    }
+    	    return;
+    	}
 
-        if (hasInventoryDate()) {
-
-            ownerInputs.forEach(function(el) {
-                el.disabled = true;
-                el.classList.add("disabled-input");
-            });
-
-            jisysInventoryDate.disabled = false;
-            jisysInventoryDate.classList.remove("disabled-input");
-
-            return;
-        }
+    	if (hasInventoryDate()) {
+    	    ownerInputs.forEach(function(el) {
+    	        if (!el) {
+    	            return;
+    	        }
+    	        el.disabled = true;
+    	        el.classList.add("disabled-input");
+    	    });
+    	    jisysInventoryDate.disabled = false;
+    	    jisysInventoryDate.classList.remove("disabled-input");
+    	    return;
+    	}
 
         if (hasOwnerData()) {
 
@@ -802,15 +867,22 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     ownerInputs.forEach(function(el) {
-        el.addEventListener("change", updateControlState);
-        el.addEventListener("input", updateControlState);
+        if (!el) {
+            return;
+        }
+        el.addEventListener( "change", updateControlState);
+        el.addEventListener( "input", updateControlState);
     });
-
-    jisysInventoryDate.addEventListener("change", updateControlState);
+    if (jisysInventoryDate) { jisysInventoryDate.addEventListener( "change", updateControlState);
+    }
 
     const form = document.getElementById("ownerAddForm");
 
     form.addEventListener("submit", function(e) {
+    if (ownerAddReadOnly) {
+    e.preventDefault();
+    return false;
+}
 
         if (jisysInventoryDate.value !== "") {
 
@@ -827,11 +899,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
 });
 </script>
-                </form>
-
+</form>
             <% } else if ("ownerHistory".equals(tab)) { %>
-
-                 <form method="post" action="<%= request.getContextPath() %>/IPadDetailServlet">
+            <form method="post" action="<%= request.getContextPath() %>/IPadDetailServlet">
                     <input type="hidden" name="action" value="registerFault">
                     <input type="hidden" name="tab" value="ownerHistory">
                     <input type="hidden" name="id" value="<%= detail.getId() %>">
@@ -1294,22 +1364,27 @@ document.addEventListener("DOMContentLoaded", function() {
             const companySelect = document.getElementById("companyId");
             const departmentSelect = document.getElementById("departmentId");
 
-            const selectedCompanyId = "<%= request.getParameter("companyId") != null ? h(request.getParameter("companyId")) : "" %>";
+            const selectedCompanyId = "<%= companyFixed ? "7000" : (request.getParameter("companyId") != null ? h(request.getParameter("companyId")) : "") %>";
             const selectedDepartmentId = "<%= request.getParameter("departmentId") != null ? h(request.getParameter("departmentId")) : "" %>";
             const selectedEmployeeId = "<%= request.getParameter("employeeId") != null ? h(request.getParameter("employeeId")) : "" %>";
 
             if (companySelect && selectedCompanyId) {
-                companySelect.value = selectedCompanyId;
-                fillDepartmentOptions(selectedCompanyId, selectedDepartmentId);
-
-                if (selectedDepartmentId) {
-                    fillEmployeeOptions(selectedCompanyId, selectedDepartmentId, selectedEmployeeId);
-                }
-            }
-
-            if (companySelect) {
-                companySelect.addEventListener("change", function(){
-                    fillDepartmentOptions(this.value, "");
+            	companySelect.value = selectedCompanyId;
+            	fillDepartmentOptions(
+                    	selectedCompanyId,
+                    	selectedDepartmentId);
+            	if (selectedDepartmentId) {
+                	fillEmployeeOptions(
+                        selectedCompanyId,
+                        selectedDepartmentId,
+                        selectedEmployeeId);
+            	}
+            	}
+            
+            if (companySelect
+                    && companySelect.type !== "hidden") {
+                companySelect.addEventListener( "change", function() {
+                    fillDepartmentOptions( this.value, "");
                 });
             }
 

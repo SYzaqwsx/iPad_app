@@ -50,6 +50,55 @@ public class IPadDetailServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/TerminalServlet");
             return;
         }
+        HttpSession session = req.getSession(false);
+
+        Integer roleId = getRoleId(session);
+
+        boolean isRole89 =
+                roleId != null
+                && roleId.intValue() == 89;
+
+        boolean isRole99 =
+                roleId != null
+                && roleId.intValue() == 99;
+
+        boolean isIbsTerminal =
+                dao.isIbsTerminal(
+                        detail.getSerialNumber());
+
+        boolean companyFixed =
+                isRole89
+                && isIbsTerminal;
+
+        boolean ownerAddReadOnly =
+                isRole99;
+
+        req.setAttribute(
+                "roleId",
+                roleId);
+
+        req.setAttribute(
+                "isIbsTerminal",
+                isIbsTerminal);
+
+        req.setAttribute(
+                "companyFixed",
+                companyFixed);
+
+        req.setAttribute(
+                "ownerAddReadOnly",
+                ownerAddReadOnly);
+
+        System.out.println(
+                "[IPadDetailServlet] roleId="
+                + roleId
+                + ", isIbsTerminal="
+                + isIbsTerminal
+                + ", companyFixed="
+                + companyFixed
+                + ", ownerAddReadOnly="
+                + ownerAddReadOnly
+        );
 
         detail.setCompanyOptions(dao.getCompanyList());
         detail.setDepartmentOptions(dao.getDepartmentList());
@@ -230,6 +279,11 @@ public class IPadDetailServlet extends HttpServlet {
                 }
 
             } else if ("addOwner".equals(action)) {
+            	
+            	Integer roleId = getRoleId(session);
+
+            	boolean isRole89 = roleId != null && roleId.intValue() == 89;
+            	boolean isRole99 = roleId != null && roleId.intValue() == 99;
 
                 long addOwnerStart = System.currentTimeMillis();
 
@@ -248,6 +302,17 @@ public class IPadDetailServlet extends HttpServlet {
 
 
                 Detail_dto terminal = dao.findTerminalById(id);
+                
+                boolean isIbsTerminal = terminal != null && dao.isIbsTerminal( terminal.getSerialNumber());
+                if (isRole99) { errors.add(
+                        "この権限では利用者情報を追加できません。");
+                    tab = "ownerAdd";
+
+                } else if (isRole89 && !isIbsTerminal) {
+                    errors.add(
+                        "IBS端末以外には利用者情報を追加できません。");
+                    tab = "ownerAdd";
+                }
 
                 if (terminal == null) {
                     errors.add("端末情報が取得できませんでした。");
@@ -317,7 +382,13 @@ System.out.println(
 
                         dto.setAssetNumber(terminal.getAssetNumber());
                         dto.setSerialNumber(terminal.getSerialNumber());
-                        dto.setCompanyId(trim(req.getParameter("companyId")));
+                        String requestedCompanyId = trim(req.getParameter("companyId"));
+                        boolean isIbsTerminal1 = dao.isIbsTerminal( terminal.getSerialNumber());
+                        if (isRole89 && isIbsTerminal1) {
+                            dto.setCompanyId("7000");
+                        } else {
+                            dto.setCompanyId( requestedCompanyId);
+                        }
                         dto.setDepartmentId(trim(req.getParameter("departmentId")));
                         dto.setEmployeeId(trim(req.getParameter("employeeId")));
                         dto.setDistributionDate(parseDate(req.getParameter("distributionDate")));
@@ -642,6 +713,40 @@ System.out.println(
         req.setAttribute("id", id);
 
         doGet(req, resp);
+    }
+    private Integer getRoleId(
+            HttpSession session) {
+
+        if (session == null) {
+            return null;
+        }
+
+        Object roleObj =
+                session.getAttribute(
+                        "authRoleId");
+
+        if (roleObj == null) {
+            return null;
+        }
+
+        if (roleObj instanceof Number) {
+            return ((Number) roleObj).intValue();
+        }
+
+        try {
+
+            return Integer.valueOf(
+                    roleObj.toString().trim());
+
+        } catch (NumberFormatException e) {
+
+            System.out.println(
+                "[IPadDetailServlet] invalid roleId="
+                + roleObj
+            );
+
+            return null;
+        }
     }
 
     private String trim(String s) {

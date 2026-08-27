@@ -39,7 +39,7 @@ public class Terminal_Excel_Servlet extends HttpServlet {
 	            List<Terminal_dto> list =
 	                dao.findAll(0, 999999,
 	                        company, innoArr, ownerArr,
-	                        terminated, inventory, soon);
+	                        terminated, inventory, soon, soon, soon);
 
 	            // ===== ファイル名 =====
 	            String timestamp = new java.text.SimpleDateFormat("yyyyMMddHHmmss")
