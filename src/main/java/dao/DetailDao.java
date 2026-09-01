@@ -446,10 +446,7 @@ public int deleteTerminalBySerialNumber(
         "WHERE serial_number = ? " +
         "  AND is_deleted = '0'";
 
-    System.out.println(
-        "[SQL][DetailDao.deleteTerminalBySerialNumber] "
-        + sql
-    );
+    System.out.println( "[SQL][DetailDao.deleteTerminalBySerialNumber] " + sql);
 
     System.out.println(
         "[SQL][DetailDao.deleteTerminalBySerialNumber] "
@@ -484,10 +481,7 @@ public int deleteTerminalBySerialNumber(
     } catch (Exception e) {
 
         System.out.println(
-            "[SQL][DetailDao.deleteTerminalBySerialNumber] ERROR: "
-            + e.getMessage()
-        );
-
+            "[SQL][DetailDao.deleteTerminalBySerialNumber] ERROR: " + e.getMessage());
         throw new RuntimeException(e);
     }
 }
@@ -918,11 +912,7 @@ public int updateOwnerReturnDate(
         return count;
 
     } catch (Exception e) {
-        System.out.println(
-            "[SQL][DetailDao.updateOwnerReturnDate] ERROR: "
-            + e.getMessage()
-        );
-
+        System.out.println( "[SQL][DetailDao.updateOwnerReturnDate] ERROR: " + e.getMessage());
         throw new RuntimeException(e);
     }
 }
@@ -967,11 +957,7 @@ public int updateTerminalFaultReturn(String serialNumber, String loginUserId) {
         return count;
 
     } catch (Exception e) {
-        System.out.println(
-            "[SQL][DetailDao.updateTerminalFaultReturn] ERROR: "
-            + e.getMessage()
-        );
-
+        System.out.println( "[SQL][DetailDao.updateTerminalFaultReturn] ERROR: " + e.getMessage());
         throw new RuntimeException(e);
     }
 }
@@ -1017,11 +1003,7 @@ public int updateTerminalInventoryOff(String serialNumber, String loginUserId) {
         return count;
 
     } catch (Exception e) {
-        System.out.println(
-            "[SQL][DetailDao.updateTerminalInventoryOff] ERROR: "
-            + e.getMessage()
-        );
-
+        System.out.println( "[SQL][DetailDao.updateTerminalInventoryOff] ERROR: " + e.getMessage());
         throw new RuntimeException(e);
     }
 }
@@ -1048,34 +1030,56 @@ public boolean isIbsTerminal(String serialNumber) {
 
     try (Connection con = getConnection();
          PreparedStatement ps = con.prepareStatement(sql)) {
+        ps.setString(1, serialNumber);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                System.out.println( "[SQL][DetailDao.isIbsTerminal] count=" + count);
+                return count > 0;
+            }
+        }
+
+    } catch (Exception e) {
+        System.out.println( "[SQL][DetailDao.isIbsTerminal] ERROR: " + e.getMessage());
+        throw new RuntimeException(e);
+    }
+    return false;
+}
+
+public boolean existsIbsInventoryOwner(String serialNumber) {
+
+    String sql =
+        "SELECT COUNT(1) " +
+        "FROM owner_management " +
+        "WHERE serial_number = ? " +
+        "  AND owner_num = '7999' " +
+        "  AND (is_deleted = '0' OR is_deleted IS NULL)";
+
+    System.out.println( "[SQL][DetailDao.existsIbsInventoryOwner] " + sql);
+
+    System.out.println(
+        "[SQL][DetailDao.existsIbsInventoryOwner] params: "
+        + "serialNumber="
+        + serialNumber
+    );
+
+    try (Connection con = getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
 
         ps.setString(1, serialNumber);
-
         try (ResultSet rs = ps.executeQuery()) {
-
             if (rs.next()) {
-
                 int count = rs.getInt(1);
-
-                System.out.println(
-                    "[SQL][DetailDao.isIbsTerminal] count="
-                    + count
-                );
-
+                System.out.println( "[SQL][DetailDao.existsIbsInventoryOwner] count=" + count);
                 return count > 0;
             }
         }
 
     } catch (Exception e) {
 
-        System.out.println(
-            "[SQL][DetailDao.isIbsTerminal] ERROR: "
-            + e.getMessage()
-        );
-
+        System.out.println( "[SQL][DetailDao.existsIbsInventoryOwner] ERROR: " + e.getMessage());
         throw new RuntimeException(e);
     }
-
     return false;
 }
 

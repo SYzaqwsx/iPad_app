@@ -499,7 +499,6 @@ body.detail-page .note{
         <% if (message != null) { %>
             <div class="note success"><%= h(message) %></div>
         <% } %>
-
         <% if (errors != null && !errors.isEmpty()) { %>
             <div class="note error">
                 <ul>
@@ -513,18 +512,14 @@ body.detail-page .note{
         <div class="tabs">
             <a class="tab-btn <%= "terminal".equals(tab) ? "active" : "" %>"
                href="<%= request.getContextPath() %>/IPadDetailServlet?id=<%= detail.getId() %>&amp;tab=terminal">端末情報</a>
-
             <a class="tab-btn <%= "ownerAdd".equals(tab) ? "active" : "" %>"
                href="<%= request.getContextPath() %>/IPadDetailServlet?id=<%= detail.getId() %>&amp;tab=ownerAdd">利用者を追加</a>
-
             <a class="tab-btn <%= "ownerHistory".equals(tab) ? "active" : "" %>"
                href="<%= request.getContextPath() %>/IPadDetailServlet?id=<%= detail.getId() %>&amp;tab=ownerHistory">利用者履歴</a>
         </div>
 
         <div class="panel">
-
             <% if ("terminal".equals(tab)) { %>
-
                  <form method="post" action="<%= request.getContextPath() %>/IPadDetailServlet">
 <!--                    <input type="hidden" name="action" value="updateTerminal">-->
                     <input type="hidden" name="tab" value="terminal">
@@ -541,7 +536,6 @@ body.detail-page .note{
                                     readonly
                                     class="readonly-input">
                             </div>
-
                             <div class="cell label">シリアル番号</div>
                             <div class="cell input span3 readonly-cell">
                                 <input
@@ -551,7 +545,6 @@ body.detail-page .note{
                                     readonly
                                     class="readonly-input">
                             </div>
-
                             <div class="cell label">イノテックス品番</div>
                             <div class="cell input span3">
                                 <input
@@ -559,7 +552,6 @@ body.detail-page .note{
                                     name="innoHin"
                                     value="<%= h(detail.getInnoHin()) %>">
                             </div>
-
                             <div class="cell label">端末電話番号</div>
                             <div class="cell input span3">
                                 <input
@@ -567,7 +559,6 @@ body.detail-page .note{
                                     name="tel"
                                     value="<%= h(detail.getTel()) %>">
                             </div>
-
                             <div class="cell label">契約日</div>
                             <div class="cell input">
                                 <input
@@ -575,7 +566,6 @@ body.detail-page .note{
                                     name="contractDate"
                                     value="<%= detail.getContractDate() != null ? detail.getContractDate().toString() : "" %>">
                             </div>
-
                             <div class="cell label">契約満了日</div>
                             <div class="cell input">
                                 <input
@@ -583,7 +573,6 @@ body.detail-page .note{
                                     name="contractPeriod"
                                     value="<%= detail.getContractPeriod() != null ? detail.getContractPeriod().toString() : "" %>">
                             </div>
-
                             <div class="cell label">レンタル会社</div>
                             <div class="cell input span3">
                                 <input
@@ -591,7 +580,6 @@ body.detail-page .note{
                                     name="rentalCompany"
                                     value="<%= h(detail.getRentalCompany()) %>">
                             </div>
-
                             <div class="cell label">解約日</div>
                             <div class="cell input span3">
                                 <input
@@ -599,7 +587,6 @@ body.detail-page .note{
                                     name="terminationDate"
                                     value="<%= detail.getTerminationDate() != null ? detail.getTerminationDate().toString() : "" %>">
                             </div>
-
                             <div class="cell label">単価</div>
                             <div class="cell input span3">
                                 <input
@@ -607,7 +594,6 @@ body.detail-page .note{
                                     name="tanka"
                                     value="<%= detail.getTanka() != null ? detail.getTanka() : "" %>">
                             </div>
-
                             <div class="cell label">UDID</div>
                             <div class="cell input span3 readonly-cell">
                                 <input
@@ -617,7 +603,6 @@ body.detail-page .note{
                                     readonly
                                     class="readonly-input">
                             </div>
-
                             <div class="cell label">MACアドレス</div>
                             <div class="cell input span3 readonly-cell">
                                 <input
@@ -628,7 +613,6 @@ body.detail-page .note{
                                     class="readonly-input">
                             </div>
                         </div>
-
                         <div class="actions">
                             <button
                                 type="submit"
@@ -638,15 +622,13 @@ body.detail-page .note{
                                 onclick="return confirm('端末情報を削除しますか？');">
                                 端末情報削除
                             </button>
-                            
-                            
-    <button
-        type="submit"
-        name="action"
-        value="updateTerminal"
-        class="btn btn-primary">
-        更新
-    </button>
+                            <button
+                                 type="submit"
+                                 name="action"
+                                 value="updateTerminal"
+                                 class="btn btn-primary">
+                                 更新
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -743,7 +725,6 @@ body.detail-page .note{
             <option value="">--選択--</option>
         </select>
     </div>
-
     <div class="cell label">配付日</div>
     <div class="cell input span3">
         <input
@@ -763,7 +744,6 @@ body.detail-page .note{
         <%= ownerAddReadOnly ? "disabled class=\"readonly-input\"" : "" %>>
 </div>
 </div>
-
 <div class="form-grid stock-grid">
     <div class="cell label">情シス在庫</div>
     <div class="cell input span3 stock-input-area <%= ownerAddReadOnly ? "readonly-cell" : "" %>">
@@ -805,7 +785,7 @@ body.detail-page .note{
 
     function hasOwnerData() {
         return ownerInputs.some(function(el) {
-            return el && el.value && el.value.trim() !== "";
+        return el && el.value && el.value.trim() !== "";
         });
     }
 
@@ -885,10 +865,8 @@ body.detail-page .note{
 }
 
         if (jisysInventoryDate.value !== "") {
-
             const result =
                 confirm("情シス在庫として登録しますがよろしいですか？");
-
             if (!result) {
                 e.preventDefault();
             }
@@ -947,11 +925,9 @@ body.detail-page .note{
     <input type="hidden"
            name="returnTarget"
            value="<%= h(hDto.getEmployeeId()) %>|<%= h(distributionDateStr) %>">
-
     <input type="hidden"
            name="originalReturnDate"
            value="<%= h(returnDateStr) %>">
-
     <input type="date"
            name="returnDate"
            value="<%= h(returnDateStr) %>"
@@ -1142,7 +1118,6 @@ body.detail-page .note{
                 returnLabel.textContent = "差替：ファイルの選択";
                 returnViewBtn.style.display = "inline-flex";
                 returnDeleteBtn.style.display = "inline-flex";
-
                 returnViewBtn.onclick = function(){
                     window.open(
                         "<%= request.getContextPath() %>/OwnerDocumentViewServlet?kind=return"
@@ -1151,7 +1126,6 @@ body.detail-page .note{
                         "_blank"
                     );
                 };
-
                 returnDeleteBtn.onclick = function(){
                     if (confirm("返却書の登録情報を削除しますか？")) {
                         document.getElementById("deleteId").value = detailId;
@@ -1167,12 +1141,10 @@ body.detail-page .note{
                 returnViewBtn.style.display = "none";
                 returnDeleteBtn.style.display = "none";
             }
-
             modal.style.display = "flex";
             modal.setAttribute("aria-hidden", "false");
             document.body.style.overflow = "hidden";
         }
-
         function closeDocModal(){
             const modal = document.getElementById("docModal");
             if (modal) {
@@ -1181,21 +1153,18 @@ body.detail-page .note{
                 document.body.style.overflow = "";
             }
         }
-
         const receiptFile = document.getElementById("receiptFile");
         if (receiptFile) {
             receiptFile.addEventListener("change", function(){
                 validatePdfFile(this, "receiptFileName");
             });
         }
-
         const returnFile = document.getElementById("returnFile");
         if (returnFile) {
             returnFile.addEventListener("change", function(){
                 validatePdfFile(this, "returnFileName");
             });
         }
-
         function isPdfFile(file){
             if (!file) {
                 return true;

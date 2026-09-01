@@ -53,47 +53,23 @@ public class IPadDetailServlet extends HttpServlet {
         HttpSession session = req.getSession(false);
 
         Integer roleId = getRoleId(session);
-
-        boolean isRole89 =
-                roleId != null
-                && roleId.intValue() == 89;
-
-        boolean isRole99 =
-                roleId != null
-                && roleId.intValue() == 99;
-
-        boolean isIbsTerminal =
-                dao.isIbsTerminal(
-                        detail.getSerialNumber());
-
-        boolean companyFixed =
-                isRole89
-                && isIbsTerminal;
-
-        boolean ownerAddReadOnly =
-                isRole99;
-
-        req.setAttribute(
-                "roleId",
-                roleId);
-
-        req.setAttribute(
-                "isIbsTerminal",
-                isIbsTerminal);
-
-        req.setAttribute(
-                "companyFixed",
-                companyFixed);
-
-        req.setAttribute(
-                "ownerAddReadOnly",
-                ownerAddReadOnly);
-
+        boolean isRole89 = roleId != null && roleId.intValue() == 89;
+        boolean isRole99 = roleId != null && roleId.intValue() == 99;
+        boolean isIbsTerminal = dao.isIbsTerminal( detail.getSerialNumber());
+        boolean isIbsInventoryOwner = dao.existsIbsInventoryOwner( detail.getSerialNumber());
+        boolean companyFixed = isRole89 && isIbsTerminal;
+        boolean ownerAddReadOnly = isRole99 && isIbsInventoryOwner;
+        req.setAttribute( "roleId", roleId);
+        req.setAttribute( "isIbsTerminal", isIbsTerminal);
+        req.setAttribute( "companyFixed", companyFixed);
+        req.setAttribute( "ownerAddReadOnly", ownerAddReadOnly);
         System.out.println(
                 "[IPadDetailServlet] roleId="
                 + roleId
                 + ", isIbsTerminal="
                 + isIbsTerminal
+                + ", isIbsInventoryOwner="
+                + isIbsInventoryOwner
                 + ", companyFixed="
                 + companyFixed
                 + ", ownerAddReadOnly="
@@ -104,8 +80,7 @@ public class IPadDetailServlet extends HttpServlet {
         detail.setDepartmentOptions(dao.getDepartmentList());
         detail.setEmployeeOptions(dao.getLatestEmployeeList());
 
-        List<Detail_dto> ownerHistory =
-                dao.findOwnerHistoryBySerialNumber(detail.getSerialNumber());
+        List<Detail_dto> ownerHistory = dao.findOwnerHistoryBySerialNumber(detail.getSerialNumber());
 
         req.setAttribute("detail", detail);
         req.setAttribute("ownerHistory", ownerHistory);
@@ -123,13 +98,18 @@ public class IPadDetailServlet extends HttpServlet {
         String action = req.getParameter("action");
         String tab = req.getParameter("tab");
         String idStr = req.getParameter("id");
+    	
+    	System.out.println(
+    		    "[IPadDetailServlet] action="
+    		    + action
+    		    + ", tab="
+    		    + tab
+    		);
 
-        if (tab == null || tab.isEmpty()) {
-            tab = "terminal";
-        }
 
-        if (idStr == null || idStr.isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/TerminalServlet");
+        if (tab == null || tab.isEmpty()) { tab = "terminal";}
+
+        if (idStr == null || idStr.isEmpty()) { resp.sendRedirect(req.getContextPath() + "/TerminalServlet");
             return;
         }
 
@@ -198,9 +178,7 @@ public class IPadDetailServlet extends HttpServlet {
                 );
 
                 long start = System.currentTimeMillis();
-
                 int updateCount = dao.updateTerminal(dto, loginUserId);
-
                 long end = System.currentTimeMillis();
 
                 System.out.println(
@@ -242,9 +220,7 @@ public class IPadDetailServlet extends HttpServlet {
                 } else {
 
                     long start = System.currentTimeMillis();
-
                     int count = dao.deleteTerminalBySerialNumber(serialNumber, loginUserId);
-
                     long end = System.currentTimeMillis();
 
                     System.out.println(
@@ -284,7 +260,6 @@ public class IPadDetailServlet extends HttpServlet {
 
             	boolean isRole89 = roleId != null && roleId.intValue() == 89;
             	boolean isRole99 = roleId != null && roleId.intValue() == 99;
-
                 long addOwnerStart = System.currentTimeMillis();
 
                 System.out.println(
@@ -301,30 +276,28 @@ public class IPadDetailServlet extends HttpServlet {
                 );
 
 
-                Detail_dto terminal = dao.findTerminalById(id);
-                
-                boolean isIbsTerminal = terminal != null && dao.isIbsTerminal( terminal.getSerialNumber());
-                if (isRole99) { errors.add(
-                        "この権限では利用者情報を追加できません。");
+                Detail_dto terminal = dao.findTerminalById(id);                
+                boolean isIbsTerminal = terminal != null && dao.isIbsTerminal( terminal.getSerialNumber());                
+                boolean isIbsInventoryOwner = terminal != null && dao.existsIbsInventoryOwner( terminal.getSerialNumber());
+
+                if (isRole99 && isIbsInventoryOwner) {
+                    errors.add( "IBS管理端末のため、この権限では利用者情報を追加できません。");
                     tab = "ownerAdd";
 
                 } else if (isRole89 && !isIbsTerminal) {
-                    errors.add(
-                        "IBS端末以外には利用者情報を追加できません。");
+                    errors.add( "IBS端末以外には利用者情報を追加できません。");
                     tab = "ownerAdd";
                 }
 
-                if (terminal == null) {
-                    errors.add("端末情報が取得できませんでした。");
-                    tab = "ownerAdd";
+                if (!errors.isEmpty()) { req.setAttribute("errors", errors);}
+                else if (terminal == null) { errors.add("端末情報が取得できませんでした。"); tab = "ownerAdd";
                     
-
-System.out.println(
-    "[SQL][IPadDetailServlet.addOwner] end "
-    + "(process took "
-    + (System.currentTimeMillis() - addOwnerStart)
-    + " ms)"
-);
+                System.out.println(
+                "[SQL][IPadDetailServlet.addOwner] end "
+                + "(process took "
+                + (System.currentTimeMillis() - addOwnerStart)
+                + " ms)"
+                );
 
                 } else {
                     String jisysInventoryDate = trim(req.getParameter("jisysInventoryDate"));
@@ -383,8 +356,7 @@ System.out.println(
                         dto.setAssetNumber(terminal.getAssetNumber());
                         dto.setSerialNumber(terminal.getSerialNumber());
                         String requestedCompanyId = trim(req.getParameter("companyId"));
-                        boolean isIbsTerminal1 = dao.isIbsTerminal( terminal.getSerialNumber());
-                        if (isRole89 && isIbsTerminal1) {
+                        if (isRole89 && isIbsTerminal) {
                             dto.setCompanyId("7000");
                         } else {
                             dto.setCompanyId( requestedCompanyId);
@@ -442,248 +414,511 @@ System.out.println(
                     }
                 }
 
+            } else if ("registerFault".equals(action)) {
 
+                System.out.println(
+                    "[IPadDetailServlet] registerFault START"
+                );
 
+                Detail_dto terminal =
+                        dao.findTerminalById(id);
 
-} else if ("registerFault".equals(action)) {
-    Detail_dto terminal = dao.findTerminalById(id);
+                if (terminal == null) {
 
-    if (terminal == null) {
-        errors.add("端末情報が取得できませんでした。");
-    } else {
-        String serialNumber = terminal.getSerialNumber();
+                    errors.add(
+                        "端末情報が取得できませんでした。"
+                    );
 
-        /*
-         * 1. 画面上の返却日入力値を保持
-         * key = ownerNum|distributionDate
-         */
-        String[] returnTargets = req.getParameterValues("returnTarget");
-        String[] returnDates = req.getParameterValues("returnDate");
-        String[] originalReturnDates = req.getParameterValues("originalReturnDate");
-
-        Map<String, Date> returnDateMap = new HashMap<>();
-        Map<String, String> originalReturnDateMap = new HashMap<>();
-
-        if (returnTargets != null && returnDates != null) {
-            int len = Math.min(returnTargets.length, returnDates.length);
-
-            for (int i = 0; i < len; i++) {
-                String target = trim(returnTargets[i]);
-                String returnDateStr = trim(returnDates[i]);
-
-                if (target == null || target.isEmpty()) {
-                    continue;
-                }
-
-                if (returnDateStr != null && !returnDateStr.isEmpty()) {
-                    returnDateMap.put(target, parseDate(returnDateStr));
-                }
-
-                if (originalReturnDates != null && i < originalReturnDates.length) {
-                    originalReturnDateMap.put(target, trim(originalReturnDates[i]));
                 } else {
-                    originalReturnDateMap.put(target, "");
-                }
-            }
-        }
 
-        /*
-         * 2. 故障チェック登録
-         * 返却日も同時に入っている場合は、
-         * owner_management.return_date 更新前に fault_management へ insert する
-         */
-        String[] faultTargets = req.getParameterValues("faultTarget");
+                    String serialNumber =
+                            terminal.getSerialNumber();
 
-        int faultInsertCount = 0;
-        int faultReturnUpdateCount = 0;
+                    /*
+                     * 1. 画面上の返却日入力値を取得
+                     *
+                     * returnTarget:
+                     * ownerNum|distributionDate
+                     *
+                     * returnDate:
+                     * 画面で入力された返却日
+                     *
+                     * originalReturnDate:
+                     * DB取得時点の返却日
+                     */
+                    String[] returnTargets =
+                            req.getParameterValues(
+                                "returnTarget"
+                            );
 
-        if (faultTargets != null && faultTargets.length > 0) {
-            for (String target : faultTargets) {
-                if (target == null || target.isEmpty()) {
-                    continue;
-                }
+                    String[] returnDates =
+                            req.getParameterValues(
+                                "returnDate"
+                            );
 
-                String[] parts = target.split("\\|", -1);
+                    String[] originalReturnDates =
+                            req.getParameterValues(
+                                "originalReturnDate"
+                            );
 
-                if (parts.length < 2) {
-                    continue;
-                }
+                    System.out.println(
+                        "[IPadDetailServlet.registerFault] "
+                        + "returnTargets="
+                        + (returnTargets == null
+                            ? "null"
+                            : returnTargets.length)
+                        + ", returnDates="
+                        + (returnDates == null
+                            ? "null"
+                            : returnDates.length)
+                        + ", originalReturnDates="
+                        + (originalReturnDates == null
+                            ? "null"
+                            : originalReturnDates.length)
+                    );
 
-                String employeeId = trim(parts[0]);
-                Date distributionDate = parseDate(parts[1]);
+                    /*
+                     * 故障登録時に、同じ行へ返却日も入力されているか
+                     * 判定するためのMap
+                     *
+                     * key:
+                     * ownerNum|distributionDate
+                     *
+                     * value:
+                     * 入力された返却日
+                     */
+                    Map<String, Date> returnDateMap =
+                            new HashMap<>();
 
-                if (employeeId == null || employeeId.isEmpty() || distributionDate == null) {
-                    continue;
-                }
+                    if (returnTargets != null
+                            && returnDates != null) {
 
-                Date inputReturnDate = returnDateMap.get(target);
-                boolean hasReturnDateOnScreen = inputReturnDate != null;
+                        int len = Math.min(
+                            returnTargets.length,
+                            returnDates.length
+                        );
 
-                /*
-                 * 返却日が同時入力されている場合は、
-                 * このあと返却済みになる前提なので isReturnedOwner の skip 判定はしない。
-                 * 返却日が画面で入力されていない通常の故障登録では、従来通り返却済みチェックを行う。
-                 */
-                if (!hasReturnDateOnScreen) {
-                    if (dao.isReturnedOwner(serialNumber, employeeId, distributionDate)) {
-                        continue;
+                        for (int i = 0; i < len; i++) {
+
+                            String target =
+                                    trim(returnTargets[i]);
+
+                            String returnDateStr =
+                                    trim(returnDates[i]);
+
+                            if (target == null
+                                    || target.isEmpty()) {
+
+                                continue;
+                            }
+
+                            if (returnDateStr != null
+                                    && !returnDateStr.isEmpty()) {
+
+                                Date inputReturnDate =
+                                        parseDate(
+                                            returnDateStr
+                                        );
+
+                                returnDateMap.put(
+                                    target,
+                                    inputReturnDate
+                                );
+                            }
+                        }
+                    }
+
+                    /*
+                     * 2. 故障チェック登録
+                     *
+                     * 返却日だけを登録するときは
+                     * faultTargetsがnullになる。
+                     *
+                     * この処理と返却日更新処理は
+                     * 別々に実行する。
+                     */
+                    String[] faultTargets =
+                            req.getParameterValues(
+                                "faultTarget"
+                            );
+
+                    int faultInsertCount = 0;
+                    int faultReturnUpdateCount = 0;
+
+                    if (faultTargets != null
+                            && faultTargets.length > 0) {
+
+                        for (String target
+                                : faultTargets) {
+
+                            if (target == null
+                                    || target.isEmpty()) {
+
+                                continue;
+                            }
+
+                            String[] parts =
+                                    target.split(
+                                        "\\|",
+                                        -1
+                                    );
+
+                            if (parts.length < 2) {
+
+                                continue;
+                            }
+
+                            String employeeId =
+                                    trim(parts[0]);
+
+                            Date distributionDate =
+                                    parseDate(parts[1]);
+
+                            if (employeeId == null
+                                    || employeeId.isEmpty()
+                                    || distributionDate == null) {
+
+                                continue;
+                            }
+
+                            Date inputReturnDate =
+                                    returnDateMap.get(
+                                        target
+                                    );
+
+                            boolean hasReturnDateOnScreen =
+                                    inputReturnDate != null;
+
+                            /*
+                             * 返却日が同時入力されていない場合だけ、
+                             * 既に返却済みかを確認する。
+                             *
+                             * 返却日が同時入力されている場合は、
+                             * この後の返却日更新処理で返却済みにするため、
+                             * ここではスキップ判定しない。
+                             */
+                            if (!hasReturnDateOnScreen) {
+
+                                boolean returned =
+                                        dao.isReturnedOwner(
+                                            serialNumber,
+                                            employeeId,
+                                            distributionDate
+                                        );
+
+                                if (returned) {
+
+                                    System.out.println(
+                                        "[IPadDetailServlet.registerFault] "
+                                        + "skip returned owner: "
+                                        + "serialNumber="
+                                        + serialNumber
+                                        + ", employeeId="
+                                        + employeeId
+                                        + ", distributionDate="
+                                        + distributionDate
+                                    );
+
+                                    continue;
+                                }
+                            }
+
+                            /*
+                             * 同じ故障情報が既に登録済みの場合は
+                             * 二重登録しない。
+                             */
+                            if (dao.existsFault(
+                                    employeeId,
+                                    serialNumber,
+                                    distributionDate)) {
+
+                                System.out.println(
+                                    "[IPadDetailServlet.registerFault] "
+                                    + "skip existing fault: "
+                                    + "serialNumber="
+                                    + serialNumber
+                                    + ", employeeId="
+                                    + employeeId
+                                    + ", distributionDate="
+                                    + distributionDate
+                                );
+
+                                continue;
+                            }
+
+                            System.out.println(
+                                "[SQL][DetailDao.insertFaultManagement] "
+                                + "serialNumber="
+                                + serialNumber
+                                + ", employeeId="
+                                + employeeId
+                                + ", distributionDate="
+                                + distributionDate
+                                + ", hasReturnDateOnScreen="
+                                + hasReturnDateOnScreen
+                                + ", loginUserId="
+                                + loginUserId
+                            );
+
+                            int inserted =
+                                    dao.insertFaultManagement(
+                                        terminal,
+                                        employeeId,
+                                        distributionDate,
+                                        loginUserId
+                                    );
+
+                            if (inserted > 0) {
+
+                                faultInsertCount++;
+
+                                /*
+                                 * 故障情報を登録できた場合は、
+                                 * terminal_managementの
+                                 * is_fault_returnを1へ更新する。
+                                 */
+                                int faultReturnUpdated =
+                                        dao.updateTerminalFaultReturn(
+                                            serialNumber,
+                                            loginUserId
+                                        );
+
+                                if (faultReturnUpdated > 0) {
+
+                                    faultReturnUpdateCount++;
+                                }
+
+                                System.out.println(
+                                    "[SQL][IPadDetailServlet.registerFault] "
+                                    + "updateTerminalFaultReturn result: "
+                                    + "count="
+                                    + faultReturnUpdated
+                                    + ", serialNumber="
+                                    + serialNumber
+                                );
+                            }
+                        }
+                    }
+
+                    /*
+                     * 3. 返却日更新
+                     *
+                     * 故障チェックの有無とは関係なく実行する。
+                     * 今回の修正で重要な部分。
+                     */
+                    int returnUpdateCount = 0;
+
+                    if (returnTargets != null
+                            && returnDates != null) {
+
+                        int len = Math.min(
+                            returnTargets.length,
+                            returnDates.length
+                        );
+
+                        for (int i = 0; i < len; i++) {
+
+                            String target =
+                                    trim(returnTargets[i]);
+
+                            String returnDateStr =
+                                    trim(returnDates[i]);
+
+                            String originalReturnDateStr =
+                                    "";
+
+                            if (originalReturnDates != null
+                                    && i
+                                    < originalReturnDates.length) {
+
+                                originalReturnDateStr =
+                                        trim(
+                                            originalReturnDates[i]
+                                        );
+                            }
+
+                            System.out.println(
+                                "[IPadDetailServlet.registerFault] "
+                                + "return row="
+                                + i
+                                + ", target="
+                                + target
+                                + ", returnDate="
+                                + returnDateStr
+                                + ", originalReturnDate="
+                                + originalReturnDateStr
+                            );
+
+                            /*
+                             * 返却日が空の場合は更新しない。
+                             */
+                            if (returnDateStr == null
+                                    || returnDateStr.isEmpty()) {
+
+                                continue;
+                            }
+
+                            /*
+                             * 画面表示時から変更されていない場合は
+                             * 更新しない。
+                             */
+                            if (returnDateStr.equals(
+                                    originalReturnDateStr)) {
+
+                                continue;
+                            }
+
+                            if (target == null
+                                    || target.isEmpty()) {
+
+                                errors.add(
+                                    "返却日の更新対象が取得できませんでした。"
+                                );
+
+                                continue;
+                            }
+
+                            String[] parts =
+                                    target.split(
+                                        "\\|",
+                                        -1
+                                    );
+
+                            if (parts.length < 2) {
+
+                                errors.add(
+                                    "返却日の更新対象が不正です。"
+                                );
+
+                                continue;
+                            }
+
+                            String ownerNum =
+                                    trim(parts[0]);
+
+                            Date distributionDate =
+                                    parseDate(parts[1]);
+
+                            Date returnDate =
+                                    parseDate(
+                                        returnDateStr
+                                    );
+
+                            if (ownerNum == null
+                                    || ownerNum.isEmpty()) {
+
+                                errors.add(
+                                    "返却日の更新対象ユーザーが取得できませんでした。"
+                                );
+
+                                continue;
+                            }
+
+                            if (distributionDate == null) {
+
+                                errors.add(
+                                    "返却日の更新対象の配付日が取得できませんでした。"
+                                );
+
+                                continue;
+                            }
+
+                            if (returnDate == null) {
+
+                                errors.add(
+                                    "返却日の日付形式が不正です。"
+                                );
+
+                                continue;
+                            }
+
+                            System.out.println(
+                                "[SQL][DetailDao.updateOwnerReturnDate] "
+                                + "serialNumber="
+                                + serialNumber
+                                + ", ownerNum="
+                                + ownerNum
+                                + ", distributionDate="
+                                + distributionDate
+                                + ", returnDate="
+                                + returnDate
+                                + ", loginUserId="
+                                + loginUserId
+                            );
+
+                            int count =
+                                    dao.updateOwnerReturnDate(
+                                        serialNumber,
+                                        ownerNum,
+                                        distributionDate,
+                                        returnDate,
+                                        loginUserId
+                                    );
+
+                            if (count > 0) {
+
+                                returnUpdateCount++;
+
+                            } else {
+
+                                errors.add(
+                                    "返却日の更新対象が見つかりませんでした。"
+                                );
+                            }
+                        }
+                    }
+
+                    /*
+                     * 4. 完了メッセージ作成
+                     */
+                    if (errors.isEmpty()) {
+
+                        List<String> messages =
+                                new ArrayList<>();
+
+                        if (returnUpdateCount > 0) {
+
+                            messages.add(
+                                returnUpdateCount
+                                + "件の返却日を更新しました。"
+                            );
+                        }
+
+                        if (faultInsertCount > 0) {
+
+                            messages.add(
+                                faultInsertCount
+                                + "件の故障情報を登録しました。"
+                            );
+                        }
+
+                        if (faultReturnUpdateCount > 0) {
+
+                            messages.add(
+                                "故障返却フラグを更新しました。"
+                            );
+                        }
+
+                        if (!messages.isEmpty()) {
+
+                            req.setAttribute(
+                                "message",
+                                String.join(
+                                    " ",
+                                    messages
+                                )
+                            );
+
+                        } else {
+
+                            errors.add(
+                                "登録対象がありませんでした。"
+                            );
+                        }
                     }
                 }
 
-                if (dao.existsFault(employeeId, serialNumber, distributionDate)) {
-                    continue;
-                }
-
-                System.out.println(
-                    "[SQL][DetailDao.insertFaultManagement] "
-                    + "serialNumber=" + serialNumber
-                    + ", employeeId=" + employeeId
-                    + ", distributionDate=" + distributionDate
-                    + ", hasReturnDateOnScreen=" + hasReturnDateOnScreen
-                    + ", loginUserId=" + loginUserId
-                );
-
-                int inserted = dao.insertFaultManagement(
-                	    terminal,
-                	    employeeId,
-                	    distributionDate,
-                	    loginUserId
-                	);
-
-                	if (inserted > 0) {
-                	    faultInsertCount++;
-
-                	    /*
-                	     * 故障チェックが入り、fault_management に登録できた場合は、
-                	     * 返却日の有無に関係なく terminal_management.is_fault_return を 1 に更新する
-                	     */
-                	    int faultReturnUpdated = dao.updateTerminalFaultReturn(
-                	        serialNumber,
-                	        loginUserId
-                	    );
-
-                	    if (faultReturnUpdated > 0) {
-                	        faultReturnUpdateCount++;
-                	    }
-
-                	    System.out.println(
-                	        "[SQL][IPadDetailServlet.registerFault] updateTerminalFaultReturn result: "
-                	        + "count=" + faultReturnUpdated
-                	        + ", serialNumber=" + serialNumber
-                	    );
-                	}
-        }
-
-        /*
-         * 3. 返却日更新
-         */
-        int returnUpdateCount = 0;
-
-        if (returnTargets != null && returnDates != null) {
-            int len = Math.min(returnTargets.length, returnDates.length);
-
-            for (int i = 0; i < len; i++) {
-                String target = trim(returnTargets[i]);
-                String returnDateStr = trim(returnDates[i]);
-
-                String originalReturnDateStr = "";
-                if (originalReturnDates != null && i < originalReturnDates.length) {
-                    originalReturnDateStr = trim(originalReturnDates[i]);
-                }
-
-                // 返却日が空の場合は更新しない
-                if (returnDateStr == null || returnDateStr.isEmpty()) {
-                    continue;
-                }
-
-                // 変更がない場合は更新しない
-                if (returnDateStr.equals(originalReturnDateStr)) {
-                    continue;
-                }
-
-                if (target == null || target.isEmpty()) {
-                    errors.add("返却日の更新対象が取得できませんでした。");
-                    continue;
-                }
-
-                String[] parts = target.split("\\|", -1);
-
-                if (parts.length < 2) {
-                    errors.add("返却日の更新対象が不正です。");
-                    continue;
-                }
-
-                String ownerNum = trim(parts[0]);
-                Date distributionDate = parseDate(parts[1]);
-                Date returnDate = parseDate(returnDateStr);
-
-                if (ownerNum == null || ownerNum.isEmpty()) {
-                    errors.add("返却日の更新対象ユーザーが取得できませんでした。");
-                    continue;
-                }
-
-                if (distributionDate == null) {
-                    errors.add("返却日の更新対象の配付日が取得できませんでした。");
-                    continue;
-                }
-
-                if (returnDate == null) {
-                    errors.add("返却日の日付形式が不正です。");
-                    continue;
-                }
-
-                System.out.println(
-                    "[SQL][DetailDao.updateOwnerReturnDate] "
-                    + "serialNumber=" + serialNumber
-                    + ", ownerNum=" + ownerNum
-                    + ", distributionDate=" + distributionDate
-                    + ", returnDate=" + returnDate
-                    + ", loginUserId=" + loginUserId
-                );
-
-                int count = dao.updateOwnerReturnDate(
-                    serialNumber,
-                    ownerNum,
-                    distributionDate,
-                    returnDate,
-                    loginUserId
-                );
-
-                if (count > 0) {
-                    returnUpdateCount++;
-                } else {
-                    errors.add("返却日の更新対象が見つかりませんでした。");
-                }
-            }
-        }
-
-        if (errors.isEmpty()) {
-            List<String> messages = new ArrayList<>();
-
-            if (returnUpdateCount > 0) {
-                messages.add(returnUpdateCount + "件の返却日を更新しました。");
-            }
-
-            if (faultInsertCount > 0) {
-                messages.add(faultInsertCount + "件の故障情報を登録しました。");
-            }
-
-            if (faultReturnUpdateCount > 0) {
-                messages.add("故障返却フラグを更新しました。");
-            }
-
-            if (!messages.isEmpty()) {
-                req.setAttribute("message", String.join(" ", messages));
-            } else {
-                errors.add("登録対象がありませんでした。");
-            }
-        }
-    }
-
-    tab = "ownerHistory";
-
-
-    }
+                tab = "ownerHistory";
             } else {
                 errors.add("不正な操作が行われました。");
                 tab = "terminal";
