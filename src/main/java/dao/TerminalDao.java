@@ -301,7 +301,7 @@ public class TerminalDao extends BaseDao {
     // =============================
     public List<String> getInnoHinList() {
         List<String> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT inno_hin FROM terminal_management ORDER BY inno_hin";
+        String sql = "SELECT DISTINCT inno_hin FROM terminal_management where is_deleted = '0' ORDER BY inno_hin";
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
