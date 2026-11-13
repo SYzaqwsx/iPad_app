@@ -75,6 +75,36 @@ public class RegisterDao extends BaseDao {
 
         return false;
     }
+    
+    public boolean existsBySerialNumberDeleted(String serialNumber) throws Exception {
+        String sql = "SELECT COUNT(*) FROM terminal_management WHERE serial_number = ? AND is_deleted = '1'";
+
+        System.out.println("[SQL][RegisterDao.existsBySerialNumber] " + sql);
+        System.out.println("[SQL][RegisterDao.existsBySerialNumber] params: serialNumber=" + serialNumber);
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, serialNumber);
+
+            long execStart = System.currentTimeMillis();
+
+            try (ResultSet rs = ps.executeQuery()) {
+                long execTook = System.currentTimeMillis() - execStart;
+
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+
+                    System.out.println("[SQL][RegisterDao.existsBySerialNumber] count=" + count
+                            + " (query took " + execTook + " ms)");
+
+                    return count > 0;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /**
      * 現在の最大ID + 1 を取得

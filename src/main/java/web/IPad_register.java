@@ -171,6 +171,14 @@ public class IPad_register extends HttpServlet {
                 req.getRequestDispatcher(JSP_PATH).forward(req, resp);
                 return;
             }
+            
+            // 削除済み端末シリアル番号重複チェック
+            if (dao.existsBySerialNumberDeleted(serialNumber)) {
+                errors.add("このシリアル番号の端末は既に登録されており、削除済みです。再度一覧に表示させたい場合は管理者にお問い合わせください");
+                req.setAttribute("errors", errors);
+                req.getRequestDispatcher(JSP_PATH).forward(req, resp);
+                return;
+            }
 
             int result = dao.insert(form, loginUserId);
 
