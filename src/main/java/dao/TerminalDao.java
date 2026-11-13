@@ -108,6 +108,9 @@ public class TerminalDao extends BaseDao {
             System.out.println(
             		"[TerminalDao.findAll] ibsOnly="
             		+ ibsOnly);
+            System.out.println(
+            		"[TerminalDao.findAll] adminView="
+            		+ adminView);
 
             int idx = 1;
             if (!adminView) {

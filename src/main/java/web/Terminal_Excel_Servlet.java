@@ -35,11 +35,11 @@ public class Terminal_Excel_Servlet extends HttpServlet {
 
 	            TerminalDao dao = new TerminalDao();
 
-	            // ✅ Excelは全件取得（limitなし）
+	            // ✅ Excelは全件取得（limitなし）、adminViewはtrue固定(dao側で!adminView判定に引っかかるため)
 	            List<Terminal_dto> list =
 	                dao.findAll(0, 999999,
 	                        company, innoArr, ownerArr,
-	                        terminated, inventory, soon, soon, soon);
+	                        terminated, inventory, soon, soon, true);
 
 	            // ===== ファイル名 =====
 	            String timestamp = new java.text.SimpleDateFormat("yyyyMMddHHmmss")
