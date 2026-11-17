@@ -299,33 +299,61 @@ public class TerminalDao extends BaseDao {
     // =============================
     // 会社
     // =============================
-    public List<String> getCompanyList() {
-        List<String> list = new ArrayList<>();
-        String sql = "SELECT company_name FROM company_management ORDER BY company_name";
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(rs.getString("company_name"));
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return list;
-    }
+	public List<String> getCompanyList(boolean ibsOnly) {
+	    List<String> list = new ArrayList<>();
+	    StringBuilder sql = new StringBuilder();
+	    sql.append( "SELECT company_name " );
+	    sql.append( "FROM company_management " );
+	    if (ibsOnly) {
+	        sql.append( "WHERE company_id = '7000' " );
+	    }
+	    sql.append( "ORDER BY company_name" );
+	    System.out.println( "[SQL][TerminalDao.getCompanyList] " + sql.toString() );
+	    try (Connection con = getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql.toString());
+	         ResultSet rs = ps.executeQuery()) {
+	        while (rs.next()) {
+	            list.add( rs.getString("company_name") );
+	        }
+	    } catch (Exception e) {
+	        System.out.println( "[SQL][TerminalDao.getCompanyList] ERROR: " + e.getMessage() );
+	        throw new RuntimeException(e);
+	    }
+	    return list;
+	}
 
     
     // =============================
     // 品番
     // =============================
-    public List<String> getInnoHinList() {
+    public List<String> getInnoHinList(boolean ibsOnly) {
         List<String> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT inno_hin FROM terminal_management where is_deleted = '0' ORDER BY inno_hin";
+        StringBuilder sql = new StringBuilder();
+        sql.append( "SELECT DISTINCT t.inno_hin " );
+
+        sql.append( "FROM terminal_management t " );
+
+        if (ibsOnly) {
+            sql.append(
+                "INNER JOIN owner_management o "
+                + "ON t.serial_number = o.serial_number "
+            );
+        }
+        sql.append( "WHERE t.is_deleted = '0' " );
+
+        if (ibsOnly) {
+            sql.append(
+                "AND o.company_id = '7000' "
+                + "AND (o.is_deleted = '0' "
+                + "OR o.is_deleted IS NULL) "
+            );
+        }
+        sql.append( "ORDER BY t.inno_hin" );
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+             PreparedStatement ps = con.prepareStatement(sql.toString());
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(rs.getString("inno_hin"));
+                list.add( rs.getString("inno_hin") );
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -337,11 +365,24 @@ public class TerminalDao extends BaseDao {
     // =============================
     // 利用者
     // =============================
-    public List<String> getOwnerNameList() {
+    public List<String> getOwnerNameList(boolean ibsOnly) {
         List<String> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT owner_name FROM owner_management ORDER BY owner_name";
+        StringBuilder sql = new StringBuilder();
+        sql.append(
+                "SELECT DISTINCT owner_name "
+                + "FROM owner_management "
+                + "WHERE owner_name IS NOT NULL "
+            );
+        if (ibsOnly) {
+            sql.append(
+                "AND company_id = '7000' "
+                + "AND (is_deleted = '0' "
+                + "OR is_deleted IS NULL) "
+            );
+        }
+        sql.append( "ORDER BY owner_name" );
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+             PreparedStatement ps = con.prepareStatement(sql.toString());
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(rs.getString("owner_name"));

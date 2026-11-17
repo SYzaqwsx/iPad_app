@@ -104,9 +104,9 @@ public class TerminalServlet extends HttpServlet {
                             ibsOnly
                             ,adminView);
 
-            req.setAttribute( "companyList", dao.getCompanyList());
-            req.setAttribute( "innoList", dao.getInnoHinList());
-            req.setAttribute( "ownerList", dao.getOwnerNameList());
+            req.setAttribute( "companyList", dao.getCompanyList(ibsOnly));
+            req.setAttribute( "innoList", dao.getInnoHinList(ibsOnly));
+            req.setAttribute( "ownerList", dao.getOwnerNameList(ibsOnly));
             req.setAttribute( "list", list);
             req.setAttribute( "page", page);
             req.setAttribute( "totalPage", totalPage);
