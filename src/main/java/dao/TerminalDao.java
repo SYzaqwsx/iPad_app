@@ -91,7 +91,12 @@ public class TerminalDao extends BaseDao {
             sql.append(") ");
         }
         if (inventory) {
-            sql.append("AND o.owner_num = '999' ");
+
+            if (ibsOnly) {
+                sql.append("AND o.owner_num = '7999' ");
+            } else {
+                sql.append("AND o.owner_num = '999' ");
+            }
         }
         if (soon) {
             sql.append("AND t.contract_period <= ? ");
@@ -113,7 +118,10 @@ public class TerminalDao extends BaseDao {
             		+ adminView);
 
             int idx = 1;
-            if (!adminView) {
+            if (ibsOnly) {
+                ps.setInt(idx++, 7000);
+
+            } else if (!adminView) {
                 ps.setInt(idx++, 7000);
             }
 
@@ -239,7 +247,12 @@ public class TerminalDao extends BaseDao {
         }
         // ✅ 在庫
         if (inventory) {
-            sql.append("AND o.owner_num = '999' ");
+
+            if (ibsOnly) {
+                sql.append("AND o.owner_num = '7999' ");
+            } else {
+                sql.append("AND o.owner_num = '999' ");
+            }
         }
 
         // ✅ 定期入替
@@ -249,7 +262,10 @@ public class TerminalDao extends BaseDao {
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql.toString())) {
             int idx = 1;
-            if (!adminView) {
+            if (ibsOnly) {
+                ps.setInt(idx++, 7000);
+
+            } else if (!adminView) {
                 ps.setInt(idx++, 7000);
             }
             if (company != null && !company.isEmpty()) {
