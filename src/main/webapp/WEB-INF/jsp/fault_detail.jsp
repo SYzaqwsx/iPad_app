@@ -246,7 +246,7 @@ body{
 <div class="footer">
     <div class="footer-inner">
         <a class="btn-soft"
-           href="${pageContext.request.contextPath}/FaultCount_Servlet?year=${year}&companyId=${companyId}&departmentId=${departmentId}">
+           href="${pageContext.request.contextPath}/FaultCount_Servlet?year=${year}">
             故障台数一覧に戻る
         </a>
     </div>
